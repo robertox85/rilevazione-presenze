@@ -38,9 +38,9 @@ class LocationsResource extends Resource
                 Forms\Components\TextInput::make('timezone')
                     ->required()
                     ->maxLength(50),
-                Forms\Components\TextInput::make('start_time')
+                Forms\Components\TextInput::make('working_start_time')
                     ->required(),
-                Forms\Components\TextInput::make('end_time')
+                Forms\Components\TextInput::make('working_end_time')
                     ->required(),
                 Forms\Components\TextInput::make('working_days')
                     ->required()
@@ -71,8 +71,8 @@ class LocationsResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('timezone')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('start_time'),
-                Tables\Columns\TextColumn::make('end_time'),
+                Tables\Columns\TextColumn::make('working_start_time'),
+                Tables\Columns\TextColumn::make('working_end_time'),
                 Tables\Columns\TextColumn::make('working_days')
                     ->searchable(),
                 Tables\Columns\IconColumn::make('exclude_holidays')

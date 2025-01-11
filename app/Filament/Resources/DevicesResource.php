@@ -17,6 +17,8 @@ class DevicesResource extends Resource
 {
     protected static ?string $model = Devices::class;
 
+    protected static ?string $label = 'Device';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form

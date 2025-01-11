@@ -17,6 +17,8 @@ class HolidaysResource extends Resource
 {
     protected static ?string $model = Holidays::class;
 
+    protected static ?string $label = 'Holiday';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form

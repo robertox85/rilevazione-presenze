@@ -29,7 +29,6 @@ return new class extends Migration
 
             $table->index('date');
 
-
         });
 
         DB::statement('ALTER TABLE attendances ADD CONSTRAINT chk_check_in_coords CHECK (

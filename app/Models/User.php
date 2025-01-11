@@ -19,8 +19,18 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'surname',
         'email',
         'password',
+        'tax_code',
+        'contract_type',
+        'employee_id',
+    ];
+
+    protected $casts = [
+        'active' => 'boolean',
+        'privacy_accepted_at' => 'datetime',
+        'geolocation_consent' => 'boolean',
     ];
 
     /**
