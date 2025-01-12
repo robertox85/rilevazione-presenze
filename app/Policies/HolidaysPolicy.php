@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Holidays;
+use App\Models\Holiday;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class HolidaysPolicy
@@ -21,7 +21,7 @@ class HolidaysPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Holidays $holidays): bool
+    public function view(User $user, Holiday $holidays): bool
     {
         return $user->can('view_holidays');
     }
@@ -37,7 +37,7 @@ class HolidaysPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Holidays $holidays): bool
+    public function update(User $user, Holiday $holidays): bool
     {
         return $user->can('update_holidays');
     }
@@ -45,7 +45,7 @@ class HolidaysPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Holidays $holidays): bool
+    public function delete(User $user, Holiday $holidays): bool
     {
         return $user->can('delete_holidays');
     }
@@ -61,7 +61,7 @@ class HolidaysPolicy
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Holidays $holidays): bool
+    public function forceDelete(User $user, Holiday $holidays): bool
     {
         return $user->can('force_delete_holidays');
     }
@@ -77,7 +77,7 @@ class HolidaysPolicy
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Holidays $holidays): bool
+    public function restore(User $user, Holiday $holidays): bool
     {
         return $user->can('restore_holidays');
     }
@@ -93,7 +93,7 @@ class HolidaysPolicy
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Holidays $holidays): bool
+    public function replicate(User $user, Holiday $holidays): bool
     {
         return $user->can('replicate_holidays');
     }

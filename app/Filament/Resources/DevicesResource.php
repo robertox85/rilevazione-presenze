@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DevicesResource\Pages;
 use App\Filament\Resources\DevicesResource\RelationManagers;
-use App\Models\Devices;
+use App\Models\Device;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class DevicesResource extends Resource
 {
-    protected static ?string $model = Devices::class;
+    protected static ?string $model = Device::class;
 
     protected static ?string $label = 'Device';
 

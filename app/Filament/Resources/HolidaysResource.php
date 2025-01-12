@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\HolidaysResource\Pages;
 use App\Filament\Resources\HolidaysResource\RelationManagers;
-use App\Models\Holidays;
+use App\Models\Holiday;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class HolidaysResource extends Resource
 {
-    protected static ?string $model = Holidays::class;
+    protected static ?string $model = Holiday::class;
 
     protected static ?string $label = 'Holiday';
 
@@ -25,9 +25,9 @@ class HolidaysResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('location_id')
-                    ->required()
-                    ->numeric(),
+                Forms\Components\Select::make('location_id')
+                    ->relationship('location', 'country_code')
+                    ->required(),
                 Forms\Components\DatePicker::make('holiday_date')
                     ->required(),
                 Forms\Components\TextInput::make('description')
@@ -39,7 +39,7 @@ class HolidaysResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('location_id')
+                Tables\Columns\TextColumn::make('location.country_code')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('holiday_date')

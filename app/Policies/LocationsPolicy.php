@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Locations;
+use App\Models\Location;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class LocationsPolicy
@@ -21,7 +21,7 @@ class LocationsPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Locations $locations): bool
+    public function view(User $user, Location $locations): bool
     {
         return $user->can('view_locations');
     }
@@ -37,7 +37,7 @@ class LocationsPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Locations $locations): bool
+    public function update(User $user, Location $locations): bool
     {
         return $user->can('update_locations');
     }
@@ -45,7 +45,7 @@ class LocationsPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Locations $locations): bool
+    public function delete(User $user, Location $locations): bool
     {
         return $user->can('delete_locations');
     }
@@ -61,7 +61,7 @@ class LocationsPolicy
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Locations $locations): bool
+    public function forceDelete(User $user, Location $locations): bool
     {
         return $user->can('force_delete_locations');
     }
@@ -77,7 +77,7 @@ class LocationsPolicy
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Locations $locations): bool
+    public function restore(User $user, Location $locations): bool
     {
         return $user->can('restore_locations');
     }
@@ -93,7 +93,7 @@ class LocationsPolicy
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Locations $locations): bool
+    public function replicate(User $user, Location $locations): bool
     {
         return $user->can('replicate_locations');
     }

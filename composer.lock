@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dd9192ad19a62dede01ac1d0298ee26e",
+    "content-hash": "a62678e531f119b6047ea41c457b315f",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -3859,6 +3859,57 @@
                 }
             ],
             "time": "2024-11-21T10:39:51+00:00"
+        },
+        {
+            "name": "om/icalparser",
+            "version": "v3.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/OzzyCzech/icalparser.git",
+                "reference": "da32a6978f88b1471a1a4899d8bf35a9f9bb991e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/OzzyCzech/icalparser/zipball/da32a6978f88b1471a1a4899d8bf35a9f9bb991e",
+                "reference": "da32a6978f88b1471a1a4899d8bf35a9f9bb991e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1.0"
+            },
+            "require-dev": {
+                "nette/tester": "^2.5.1"
+            },
+            "suggest": {
+                "ext-dom": "for timezone tool"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Roman Ožana",
+                    "email": "roman@ozana.cz"
+                }
+            ],
+            "description": "Simple iCal parser",
+            "keywords": [
+                "calendar",
+                "ical",
+                "parser"
+            ],
+            "support": {
+                "issues": "https://github.com/OzzyCzech/icalparser/issues",
+                "source": "https://github.com/OzzyCzech/icalparser/tree/v3.1.1"
+            },
+            "time": "2025-01-07T15:26:19+00:00"
         },
         {
             "name": "openspout/openspout",

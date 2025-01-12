@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -20,6 +22,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'location_id',
         'name',
         'surname',
         'email',
@@ -27,6 +30,9 @@ class User extends Authenticatable
         'tax_code',
         'contract_type',
         'employee_id',
+        'active',
+        'privacy_accepted_at',
+        'geolocation_consent',
     ];
 
     protected $casts = [
@@ -56,5 +62,23 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // Un utente appartiene a una sola sede
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    // Un utente ha molti devices
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class);
+    }
+
+    // Un utente ha molte presenze
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Attendances;
+use App\Models\Attendance;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class AttendancesPolicy
@@ -21,7 +21,7 @@ class AttendancesPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Attendances $attendances): bool
+    public function view(User $user, Attendance $attendances): bool
     {
         return $user->can('view_attendances');
     }
@@ -37,7 +37,7 @@ class AttendancesPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Attendances $attendances): bool
+    public function update(User $user, Attendance $attendances): bool
     {
         return $user->can('update_attendances');
     }
@@ -45,7 +45,7 @@ class AttendancesPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Attendances $attendances): bool
+    public function delete(User $user, Attendance $attendances): bool
     {
         return $user->can('delete_attendances');
     }
@@ -61,7 +61,7 @@ class AttendancesPolicy
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Attendances $attendances): bool
+    public function forceDelete(User $user, Attendance $attendances): bool
     {
         return $user->can('force_delete_attendances');
     }
@@ -77,7 +77,7 @@ class AttendancesPolicy
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Attendances $attendances): bool
+    public function restore(User $user, Attendance $attendances): bool
     {
         return $user->can('restore_attendances');
     }
@@ -93,7 +93,7 @@ class AttendancesPolicy
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Attendances $attendances): bool
+    public function replicate(User $user, Attendance $attendances): bool
     {
         return $user->can('replicate_attendances');
     }

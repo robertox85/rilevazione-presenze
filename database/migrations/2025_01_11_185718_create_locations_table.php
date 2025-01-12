@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 100);
             $table->string('address', 255)->nullable();
+
             $table->char('country_code', 2);
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();

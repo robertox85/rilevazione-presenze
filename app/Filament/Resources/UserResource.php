@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use BezhanSalleh\FilamentShield\FilamentShield;
 use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
@@ -56,13 +57,23 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
         $rows = [
-            TextInput::make('name')
-                ->required()
-                ->label(trans('filament-users::user.resource.name')),
+
             TextInput::make('email')
                 ->email()
                 ->required()
                 ->label(trans('filament-users::user.resource.email')),
+
+            TextInput::make('name')
+                ->required()
+                ->label(trans('filament-users::user.resource.name')),
+
+            TextInput::make('surname'),
+            TextInput::make('tax_code')
+                ->maxLength(16),
+
+
+
+
             TextInput::make('password')
                 ->label(trans('filament-users::user.resource.password'))
                 ->password()
@@ -72,25 +83,67 @@ class UserResource extends Resource
                         ? Hash::make($state)
                         : $record->password;
                 }),
+
+
         ];
 
 
-        if (config('filament-users.shield') && class_exists(\BezhanSalleh\FilamentShield\FilamentShield::class)) {
+        if (config('filament-users.shield') && class_exists(FilamentShield::class)) {
             $rows[] = Forms\Components\Select::make('roles')
-                ->multiple()
-                ->preload()
                 ->relationship('roles', 'name')
+
+                ->default([
+                    '2'
+                ])
+                ->selectablePlaceholder(false)
                 ->label(trans('filament-users::user.resource.roles'));
         }
 
-        $form->schema($rows);
+        $form->schema([
+            Forms\Components\Section::make('General Info')
+                ->columns(2)
+                ->schema($rows)
+            ,
+
+            Forms\Components\Section::make('Location')
+                ->columns(2)
+                ->schema([
+
+                    Forms\Components\Select::make('location_id')
+                        ->relationship('location', 'name')
+                        ->label('Location')
+                        ->required(),
+
+                    Forms\Components\Select::make('contract_type')
+                        ->options([
+                            'FULL_TIME' => 'Full Time',
+                            'EXTERNAL' => 'External',
+                        ])->default('FULL_TIME'),
+                ]),
+
+            Forms\Components\Section::make('Privacy')
+                ->columns(2)
+                ->schema([
+                    Forms\Components\DateTimePicker::make('privacy_accepted_at')
+                        ->label('Privacy Accepted At')
+                        ->columnSpanFull()
+                        ->seconds(false)
+                        ->default(now()),
+
+
+                    Forms\Components\Toggle::make('geolocation_consent')
+                        ->label('Geolocation Accepted')
+                        ->columnSpanFull()
+                        ->default(true),
+                ])
+        ]);
 
         return $form;
     }
 
     public static function table(Table $table): Table
     {
-        if(class_exists( STS\FilamentImpersonate\Tables\Actions\Impersonate::class) && config('filament-users.impersonate')){
+        if (class_exists(STS\FilamentImpersonate\Tables\Actions\Impersonate::class) && config('filament-users.impersonate')) {
             $table->actions([Impersonate::make('impersonate')]);
         }
         $table

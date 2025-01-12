@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AttendancesResource\Pages;
 use App\Filament\Resources\AttendancesResource\RelationManagers;
-use App\Models\Attendances;
+use App\Models\Attendance;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,11 +15,12 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AttendancesResource extends Resource
 {
-    protected static ?string $model = Attendances::class;
+    protected static ?string $model = Attendance::class;
 
     protected static ?string $label = 'Attendance';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
 
     public static function form(Form $form): Form
     {
