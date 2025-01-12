@@ -33,7 +33,7 @@ return [
      * ---------------------------------------------
      *  if you are using filament shield, you can set this to true.
      */
-    'shield' => false,
+    'shield' => true,
 
     /**
      * ---------------------------------------------
