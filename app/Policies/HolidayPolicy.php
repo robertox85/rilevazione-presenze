@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Device;
+use App\Models\Holiday;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class DevicesPolicy
+class HolidayPolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class DevicesPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_devices');
+        return $user->can('view_any_holidays');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Device $devices): bool
+    public function view(User $user, Holiday $holiday): bool
     {
-        return $user->can('view_devices');
+        return $user->can('view_holidays');
     }
 
     /**
@@ -31,23 +31,23 @@ class DevicesPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_devices');
+        return $user->can('create_holidays');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Device $devices): bool
+    public function update(User $user, Holiday $holiday): bool
     {
-        return $user->can('update_devices');
+        return $user->can('update_holidays');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Device $devices): bool
+    public function delete(User $user, Holiday $holiday): bool
     {
-        return $user->can('delete_devices');
+        return $user->can('delete_holidays');
     }
 
     /**
@@ -55,15 +55,15 @@ class DevicesPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_devices');
+        return $user->can('delete_any_holidays');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Device $devices): bool
+    public function forceDelete(User $user, Holiday $holiday): bool
     {
-        return $user->can('force_delete_devices');
+        return $user->can('force_delete_holidays');
     }
 
     /**
@@ -71,15 +71,15 @@ class DevicesPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_devices');
+        return $user->can('force_delete_any_holidays');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Device $devices): bool
+    public function restore(User $user, Holiday $holiday): bool
     {
-        return $user->can('restore_devices');
+        return $user->can('restore_holidays');
     }
 
     /**
@@ -87,15 +87,15 @@ class DevicesPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_devices');
+        return $user->can('restore_any_holidays');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Device $devices): bool
+    public function replicate(User $user, Holiday $holiday): bool
     {
-        return $user->can('replicate_devices');
+        return $user->can('replicate_holidays');
     }
 
     /**
@@ -103,6 +103,6 @@ class DevicesPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_devices');
+        return $user->can('reorder_holidays');
     }
 }

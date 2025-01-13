@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Holiday;
+use App\Models\Location;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class HolidaysPolicy
+class LocationPolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class HolidaysPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_holidays');
+        return $user->can('view_any_locations');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Holiday $holidays): bool
+    public function view(User $user, Location $location): bool
     {
-        return $user->can('view_holidays');
+        return $user->can('view_locations');
     }
 
     /**
@@ -31,23 +31,23 @@ class HolidaysPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_holidays');
+        return $user->can('create_locations');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Holiday $holidays): bool
+    public function update(User $user, Location $location): bool
     {
-        return $user->can('update_holidays');
+        return $user->can('update_locations');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Holiday $holidays): bool
+    public function delete(User $user, Location $location): bool
     {
-        return $user->can('delete_holidays');
+        return $user->can('delete_locations');
     }
 
     /**
@@ -55,15 +55,15 @@ class HolidaysPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_holidays');
+        return $user->can('delete_any_locations');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Holiday $holidays): bool
+    public function forceDelete(User $user, Location $location): bool
     {
-        return $user->can('force_delete_holidays');
+        return $user->can('force_delete_locations');
     }
 
     /**
@@ -71,15 +71,15 @@ class HolidaysPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_holidays');
+        return $user->can('force_delete_any_locations');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Holiday $holidays): bool
+    public function restore(User $user, Location $location): bool
     {
-        return $user->can('restore_holidays');
+        return $user->can('restore_locations');
     }
 
     /**
@@ -87,15 +87,15 @@ class HolidaysPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_holidays');
+        return $user->can('restore_any_locations');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Holiday $holidays): bool
+    public function replicate(User $user, Location $location): bool
     {
-        return $user->can('replicate_holidays');
+        return $user->can('replicate_locations');
     }
 
     /**
@@ -103,6 +103,6 @@ class HolidaysPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_holidays');
+        return $user->can('reorder_locations');
     }
 }

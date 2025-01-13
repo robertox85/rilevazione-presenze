@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Location;
+use App\Models\Attendance;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class LocationsPolicy
+class AttendancePolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class LocationsPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_locations');
+        return $user->can('view_any_attendances');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Location $locations): bool
+    public function view(User $user, Attendance $attendance): bool
     {
-        return $user->can('view_locations');
+        return $user->can('view_attendances');
     }
 
     /**
@@ -31,23 +31,23 @@ class LocationsPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_locations');
+        return $user->can('create_attendances');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Location $locations): bool
+    public function update(User $user, Attendance $attendance): bool
     {
-        return $user->can('update_locations');
+        return $user->can('update_attendances');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Location $locations): bool
+    public function delete(User $user, Attendance $attendance): bool
     {
-        return $user->can('delete_locations');
+        return $user->can('delete_attendances');
     }
 
     /**
@@ -55,15 +55,15 @@ class LocationsPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_locations');
+        return $user->can('delete_any_attendances');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Location $locations): bool
+    public function forceDelete(User $user, Attendance $attendance): bool
     {
-        return $user->can('force_delete_locations');
+        return $user->can('force_delete_attendances');
     }
 
     /**
@@ -71,15 +71,15 @@ class LocationsPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_locations');
+        return $user->can('force_delete_any_attendances');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Location $locations): bool
+    public function restore(User $user, Attendance $attendance): bool
     {
-        return $user->can('restore_locations');
+        return $user->can('restore_attendances');
     }
 
     /**
@@ -87,15 +87,15 @@ class LocationsPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_locations');
+        return $user->can('restore_any_attendances');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Location $locations): bool
+    public function replicate(User $user, Attendance $attendance): bool
     {
-        return $user->can('replicate_locations');
+        return $user->can('replicate_attendances');
     }
 
     /**
@@ -103,6 +103,6 @@ class LocationsPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_locations');
+        return $user->can('reorder_attendances');
     }
 }

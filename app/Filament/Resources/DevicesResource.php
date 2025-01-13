@@ -33,6 +33,9 @@ class DevicesResource extends Resource
                     ->maxLength(100),
                 Forms\Components\TextInput::make('device_uuid')
                     ->required()
+                    ->default(fn () => request()->get('device_uuid'))
+                    ->disabled()
+                    ->dehydrated(true)
                     ->maxLength(36),
             ]);
     }

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Helpers\Helper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class Location extends Model
@@ -42,6 +43,7 @@ class Location extends Model
     {
         return $this->hasMany(User::class);
     }
+
     // Una sede ha molte festività
     public function holidays(): HasMany
     {
@@ -74,5 +76,28 @@ class Location extends Model
             // refresh the model to get the updated values
             $location->refresh();
         });
+    }
+
+    public function isWorkingDay(Carbon $date): bool
+    {
+        $working_days = $this->working_days ?? [1, 2, 3, 4, 5]; // Default: lunedì-venerdì
+
+        // Controlla se il giorno della settimana è un giorno lavorativo
+        if (!in_array($date->dayOfWeekIso, $working_days)) {
+            return false;
+        }
+
+        // Controlla se la sede esclude le festività
+        if ($this->exclude_holidays) {
+            $holiday = Holiday::where('location_id', $this->id)
+                ->where('holiday_date', $date->toDateString())
+                ->exists();
+
+            if ($holiday) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

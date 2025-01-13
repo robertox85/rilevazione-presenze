@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
+// Method to handle user login
+use Hashids\Hashids;
+use Illuminate\Support\Facades\URL;
+
 
 class UserAuthController extends Controller
 {
@@ -48,9 +52,7 @@ class UserAuthController extends Controller
 
         }
 
-        $token = $user->createToken
-
-        ('my-app-token')->plainTextToken;
+        $token = $user->createToken('my-app-token')->plainTextToken;
 
         return response()->json(['token' => $token], 200);
 
@@ -84,7 +86,7 @@ class UserAuthController extends Controller
             $user = User::create($data);
 
             // assign role dipendente if exists
-            $user->assignRole('dipendente');
+            $user->assignRole('employee');
 
             //$token = $user->createToken('my-app-token')->plainTextToken;
 
@@ -103,29 +105,22 @@ class UserAuthController extends Controller
 
     }
 
-    // Method to handle user login
+
     public function login(Request $request)
     {
-
         try {
             $request->validate([
-
                 'email' => 'required|email',
-
                 'password' => 'required',
-
                 'device_uuid' => 'required|uuid',
-
             ]);
 
             $user = User::where('email', $request->email)->first();
 
             if (!$user || !Hash::check($request->password, $user->password)) {
-
                 return response()->json([
                     'message' => 'Invalid Credentials'
                 ], 401);
-
             }
 
             $device = Device::where('user_id', $user->id)
@@ -133,26 +128,50 @@ class UserAuthController extends Controller
                 ->first();
 
             if (!$device) {
+                $hashids = new Hashids(config('app.key'), 10);
+                $hashedId = $hashids->encode($user->id);
+
+                // Semplifichiamo l'URL rimuovendo il callback per ora
+                $tempUrl = URL::temporarySignedRoute(
+                    'temp.login',
+                    now()->addMinutes(30),
+                    [
+                        'u' => $hashedId,
+                        'device_uuid' => $request->device_uuid,
+                    ]
+                );
+
                 return response()->json([
-                    'error' => 'Dispositivo non riconosciuto. Effettua la registrazione del dispositivo.'
+                    'message' => 'Device not authorized.',
+                    'registration_url' => $tempUrl,
+                    'expires_in' => 30, // minuti
                 ], 403);
             }
 
-            // Genera token di accesso per l'utente
+            if (!$user->active) {
+                return response()->json([
+                    'message' => 'User is not active.'
+                ], 403);
+            }
+
+            if ($user->devices->count() === 1 && $user->devices->first()->device_uuid !== $request->device_uuid) {
+                return response()->json([
+                    'message' => 'Only one device is allowed.'
+                ], 403);
+            }
+
             $token = $user->createToken($request->device_uuid)->plainTextToken;
 
             return response()->json([
-                'message' => 'Login effettuato con successo.',
+                'message' => 'Login successful.',
                 'token' => $token,
                 'device_name' => $device->device_name,
             ], 200);
-
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(['message' => 'Login failed.' . $e->getMessage()], 500);
         }
-
     }
 
     // Method to handle user logout and token revocation
@@ -181,45 +200,46 @@ class UserAuthController extends Controller
             // Validazione dei dati
             $this->validateCheckInRequest($request);
 
-            $device = Device::where('user_id', $request->user_id)
+            // Recupera l'utente autenticato
+            $user = $request->user();
+
+            $device = Device::where('user_id', $user->id)
                 ->where('device_uuid', $request->device_uuid)
                 ->first();
 
             if (!$device) {
-                return response()->json(['error' => 'Dispositivo non autorizzato.'], 403);
+                return response()->json(['error' => 'Device not authorized.'], 403);
             }
 
-            // Recupera l'utente e la sede associata
-            $user = $this->getUserWithSede($request->user_id);
-            $sede = $user->anagrafica->sede;
+            $location = $user->location;
 
             // Verifica il fuso orario e ottieni l'ora attuale nella sede
-            $timezone = $sede->fuso_orario ?? 'UTC'; // Default a UTC se non configurato
-            $nowInSedeTimezone = Carbon::now($timezone);
+            $timezone = $location->timezone ?? 'UTC'; // Default a UTC se non configurato
+            $nowInLocationTimezone = Carbon::now($timezone);
 
             // Verifica se oggi è un giorno lavorativo
-            $this->validateWorkingDay($sede, $nowInSedeTimezone);
+            $this->validateWorkingDay($location, $nowInLocationTimezone);
 
             // Recupera gli orari lavorativi
-            $this->validateWorkingHours($sede, $nowInSedeTimezone, $timezone, $nowInSedeTimezone);
+            $this->validateWorkingHours($location, $nowInLocationTimezone, $timezone, $nowInLocationTimezone);
 
-            $isEsterno = $user->anagrafica->isEsterno();
-            if (!$isEsterno) {
-                $this->validateDistance($request->latitude, $request->longitude, $sede);
+            $isExternal = $user->contract_type === 'external';
+            if (!$isExternal) {
+                $this->validateDistance($request->latitude, $request->longitude, $location);
             }
 
             // Registra la presenza
-            $this->registerPresence($user, $request, $nowInSedeTimezone);
+            $this->registerPresence($user, $device, $request, $nowInLocationTimezone);
 
 
             return response()->json([
-                'message' => 'Presenza registrata con successo.',
-                'distance' => $this->calculateDistance($request->latitude, $request->longitude, $sede),
-                'device_name' => $request->device_name,
-                'user_id' => $request->user_id,
-                'data' => now()->format('Y-m-d'),
-                'ora_entrata' => now()->format('H:i:s'),
-                'fuso_orario' => $sede->fuso_orario,
+                'message' => 'Check-in successfully registered.',
+                'distance' => $this->calculateDistance($request->latitude, $request->longitude, $location),
+                'device_uuid' => $request->device_uuid,
+                'user_id' => $user->id,
+                'date' => now()->format('Y-m-d'),
+                'check_in' => now()->format('H:i:s'),
+                'timezone' => $location->timezone,
             ], 200);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
@@ -244,48 +264,48 @@ class UserAuthController extends Controller
             }
 
             // Recupera l'utente e la sede associata
-            $user = $this->getUserWithSede($request->user_id);
-            $sede = $user->anagrafica->sede;
-            $timezone = $sede->fuso_orario ?? 'UTC'; // Default a UTC se non configurato
+            $user = $this->getUserWithLocation($request->user_id);
+            $location = $user->location;
+            $timezone = $location->timezone ?? 'UTC'; // Default a UTC se non configurato
 
             // Trova la presenza di oggi per l'utente
-            $presenza = Presenza::where('anagrafica_id', $user->anagrafica->id)
-                ->whereDate('data', now()->toDateString())
+            $attendance = Attendance::where('user_id', $user->id)
+                ->whereDate('date', now()->toDateString())
                 ->first();
 
-            if (!$presenza) {
-                return response()->json(['error' => 'Presenza non registrata per oggi.'], 400);
+            if (!$attendance) {
+                return response()->json(['error' => 'Attendance not found.'], 404);
             }
 
-            if ($presenza->ora_uscita) {
-                return response()->json(['error' => 'Uscita già registrata.'], 400);
+            if ($attendance->check_out) {
+                return response()->json(['error' => 'Check-out already registered.'], 400);
             }
 
             // Confronta orario di uscita con orario lavorativo della sede
-            $orarioCheckOut = Carbon::now( $timezone );
+            $orarioCheckOut = Carbon::now($timezone);
 
-            if ($orarioCheckOut->lt(Carbon::parse($presenza->ora_entrata))) {
-                return response()->json(['error' => 'L\'orario di uscita non può essere precedente all\'orario di entrata.'], 400);
+            if ($orarioCheckOut->lt(Carbon::parse($attendance->check_in))) {
+                return response()->json(['error' => 'Check-out time is before check-in time.'], 400);
             }
 
             // Controllo opzionale su coordinate di uscita (ad esempio distanza massima dalla sede)
-            $isEsterno = $user->anagrafica->isEsterno();
-            if (!$isEsterno) {
-                $this->validateDistance($request->latitude, $request->longitude, $sede);
+            $isExternal = $user->contract_type === 'external';
+            if (!$isExternal) {
+                $this->validateDistance($request->latitude, $request->longitude, $location);
             }
 
             // Registra l'uscita
-            $presenza->ora_uscita = $orarioCheckOut->format('H:i:s');
-            $presenza->coordinate_uscita_lat = $request->latitude;
-            $presenza->coordinate_uscita_long = $request->longitude;
-            $presenza->save();
+            $attendance->check_out = $orarioCheckOut->format('H:i:s');
+            $attendance->check_out_latitude = $request->latitude;
+            $attendance->check_out_longitude = $request->longitude;
+            $attendance->save();
 
             return response()->json([
-                'message' => 'Uscita registrata con successo.',
-                'data' => $presenza->data,
-                'ora_entrata' => $presenza->ora_entrata,
-                'ora_uscita' => $presenza->ora_uscita,
-                'user' => $user->anagrafica->nome . ' ' . $user->anagrafica->cognome,
+                'message' => 'Check-out successfully registered.',
+                'date' => now()->format('Y-m-d'),
+                'check_in' => $attendance->check_in,
+                'check_out' => $attendance->check_out,
+                'user' => $user->name . ' ' . $user->surname,
             ]);
 
         } catch (\Exception $e) {
@@ -311,12 +331,8 @@ class UserAuthController extends Controller
                 'max:180',
                 'regex:/^-?\d{1,3}\.\d+$/',
             ],
-            'user_id' => [
-                'required',
-                'exists:users,id',
-                'integer',
-            ],
-            'orario_entrata' => [
+
+            'check_in' => [
                 'required',
                 'date_format:H:i:s',
             ],
@@ -352,11 +368,11 @@ class UserAuthController extends Controller
                 'exists:users,id',
                 'integer',
             ],
-            'device_uuid' => [
-                'required',
-                'uuid',
-                'exists:devices,device_uuid',
-            ],
+            // 'device_uuid' => [
+            //     'required',
+            //     'uuid',
+            //     'exists:devices,device_uuid',
+            // ],
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -366,54 +382,61 @@ class UserAuthController extends Controller
         }
     }
 
-    protected function getUserWithSede(int $userId): User
+    protected function getUserWithLocation(int $userId): User
     {
-        $user = User::with('anagrafica.sede')->find($userId);
+        $user = User::with('location')->find($userId);
 
-        if (!$user || !$user->anagrafica || !$user->anagrafica->sede) {
+        if (!$user || !$user->location) {
             throw new \Exception('User not found or missing related data.');
         }
 
         return $user;
     }
 
-    protected function validateWorkingDay($sede, $nowInSedeTimezone): void
+    protected function validateWorkingDay($location, $nowInLocationTimezone): void
     {
-        if (!$sede->giorni_feriali) {
+        if (!$location->working_days) {
             throw new \Exception('Working days not configured.');
         }
 
-        if (!$sede->isWorkingDay($nowInSedeTimezone)) {
-            throw new \Exception('Oggi non è un giorno lavorativo.');
+        if (!$location->isWorkingDay($nowInLocationTimezone)) {
+            throw new \Exception('Not a working day.');
         }
     }
 
-    protected function validateWorkingHours($sede, string $orarioEntrata, string $timezone, Carbon $nowInSedeTimezone): void
+    protected function validateWorkingHours($location, string $checkIn, string $timezone, Carbon $nowInLocationTimezone): void
     {
-        $orarioLavorativoInizio = Carbon::parse($sede->orario_inizio, $timezone)->subMinutes(15);
-        $orarioLavorativoFine = Carbon::parse($sede->orario_fine, $timezone)->addMinutes(15);
-        $orarioUtente = Carbon::createFromFormat('H:i:s', $orarioEntrata, $timezone);
+        // Normalizza l'orario di check-in e rimuove i secondi
+        $checkInUser = Carbon::parse($checkIn, $timezone)->startOfMinute();
 
-        // Verifica che l'orario di ingresso non sia nel passato
-        if ($orarioUtente->lt($nowInSedeTimezone)) {
-            throw new \Exception('Stai cercando di registrare un orario di ingresso passato.');
+        // Definisce i limiti dell'orario lavorativo con tolleranza (senza secondi)
+        $workingStartTime = Carbon::parse($location->working_start_time, $timezone)->subMinutes(15)->startOfMinute();
+        $workingEndTime = Carbon::parse($location->working_end_time, $timezone)->addMinutes(15)->startOfMinute();
+
+        // Log per debug (facoltativo)
+        Log::info("Check-in: $checkInUser, Start: $workingStartTime, End: $workingEndTime, Now: {$nowInLocationTimezone->startOfMinute()}");
+
+        // Controlla che il check-in non sia nel passato
+        if ($checkInUser->lt($nowInLocationTimezone->startOfMinute())) {
+            throw new \Exception('Check-in time cannot be in the past.');
         }
 
-        // Verifica che l'orario di ingresso sia all'interno dell'intervallo lavorativo
-        if ($orarioUtente->lt($orarioLavorativoInizio) || $orarioUtente->gt($orarioLavorativoFine)) {
-            throw new \Exception('Stai cercando di registrare un orario di ingresso fuori dall\'orario lavorativo.');
+        // Controlla che il check-in sia all'interno dell'orario lavorativo
+        if ($checkInUser->lt($workingStartTime) || $checkInUser->gt($workingEndTime)) {
+            throw new \Exception('Check-in time is outside working hours.');
         }
     }
 
-    protected function registerPresence(User $user, Request $request, Carbon $nowInSedeTimezone)
+    protected function registerPresence(User $user, Device $device, Request $request, Carbon $nowInLocationTimezone)
     {
         // Registra la presenza
-        Presenza::create([
-            'anagrafica_id' => $user->anagrafica->id,
-            'data' => $nowInSedeTimezone->toDateString(),
-            'ora_entrata' => $nowInSedeTimezone->format('H:i:s'),
-            'coordinate_entrata_lat' => $request->latitude,
-            'coordinate_entrata_long' => $request->longitude,
+        Attendance::create([
+            'user_id' => $user->id,
+            'device_id' => $device->id,
+            'date' => $nowInLocationTimezone->toDateString(),
+            'check_in' => $nowInLocationTimezone->format('H:i:s'),
+            'check_in_latitude' => $request->latitude,
+            'check_in_longitude' => $request->longitude,
         ]);
     }
 
@@ -431,35 +454,35 @@ class UserAuthController extends Controller
             'user_id' => $request->user_id,
         ]);
 
-        return response()->json(['message' => 'Dispositivo registrato con successo.', 'device' => $device], 201);
+        return response()->json(['message' => 'Device registered successfully.', 'device' => $device], 201);
     }
 
-    public function validateDistance($latitude, $longitude, $sede): bool
+    public function validateDistance($latitude, $longitude, $location): bool
     {
 
         // Calcoliamo la distanza
         $distance = self::calculateDistance(
             $latitude,
             $longitude,
-            $sede
+            $location
         );
 
 
         if ($distance > self::DISTANCE_TOLERANCE) {
-            throw new \Exception('Distanza maggiore di ' . self::DISTANCE_TOLERANCE . ' metri.');
+            throw new \Exception('Distance from location is greater than tolerance, distance: ' . $distance . ' meters');
         }
 
         return true;
     }
 
-    protected function calculateDistance(mixed $latitude, mixed $longitude, $sede)
+    protected function calculateDistance(mixed $latitude, mixed $longitude, $location)
     {
         $earthRadius = 6371000; // Raggio terrestre in metri
 
         $latFrom = deg2rad($latitude);
         $lonFrom = deg2rad($longitude);
-        $latTo = deg2rad($sede->latitudine);
-        $lonTo = deg2rad($sede->longitudine);
+        $latTo = deg2rad($location->latitude);
+        $lonTo = deg2rad($location->longitude);
 
         $latDelta = $latTo - $latFrom;
         $lonDelta = $lonTo - $lonFrom;

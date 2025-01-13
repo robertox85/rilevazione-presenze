@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Attendance;
+use App\Models\Device;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class AttendancesPolicy
+class DevicePolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,19 @@ class AttendancesPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_attendances');
+        if ($user->hasRole('employee')) {
+            return $user->devices()->exists();
+        }
+
+        return $user->can('view_any_devices');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Attendance $attendances): bool
+    public function view(User $user, Device $device): bool
     {
-        return $user->can('view_attendances');
+        return $user->can('view_devices');
     }
 
     /**
@@ -31,23 +35,32 @@ class AttendancesPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_attendances');
+        return $user->can('create_devices');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Attendance $attendances): bool
+    public function update(User $user, Device $device): bool
     {
-        return $user->can('update_attendances');
+        // Employee non può modificare i device
+        if ($user->hasRole('employee')) {
+            return false;
+        }
+
+        return $user->can('update_devices');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Attendance $attendances): bool
+    public function delete(User $user, Device $device): bool
     {
-        return $user->can('delete_attendances');
+        // Employee non può cancellare i device
+        if ($user->hasRole('employee')) {
+            return false;
+        }
+        return $user->can('delete_devices');
     }
 
     /**
@@ -55,15 +68,15 @@ class AttendancesPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_attendances');
+        return $user->can('delete_any_devices');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Attendance $attendances): bool
+    public function forceDelete(User $user, Device $device): bool
     {
-        return $user->can('force_delete_attendances');
+        return $user->can('force_delete_devices');
     }
 
     /**
@@ -71,15 +84,15 @@ class AttendancesPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_attendances');
+        return $user->can('force_delete_any_devices');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Attendance $attendances): bool
+    public function restore(User $user, Device $device): bool
     {
-        return $user->can('restore_attendances');
+        return $user->can('restore_devices');
     }
 
     /**
@@ -87,15 +100,15 @@ class AttendancesPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_attendances');
+        return $user->can('restore_any_devices');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Attendance $attendances): bool
+    public function replicate(User $user, Device $device): bool
     {
-        return $user->can('replicate_attendances');
+        return $user->can('replicate_devices');
     }
 
     /**
@@ -103,6 +116,6 @@ class AttendancesPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_attendances');
+        return $user->can('reorder_devices');
     }
 }
