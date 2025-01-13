@@ -35,6 +35,11 @@ Route::get('/device-registration-complete', function (Request $request) {
 Route::post('login', [UserAuthController::class, 'login']);
 Route::post('logout', [UserAuthController::class, 'logout'])->middleware('auth:sanctum');
 
+Route::get('/reset-presenze', function (Request $request) {
+    Attendance::truncate();
+    return response()->json(['message' => 'Presenze resettate con successo.'], 200);
+})->middleware('auth:sanctum');
+
 
 /**
  * Record presence
