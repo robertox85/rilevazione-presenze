@@ -111,8 +111,7 @@ class UserResource extends Resource
 
                     Forms\Components\Select::make('location_id')
                         ->relationship('location', 'name')
-                        ->label('Location')
-                        ->required(),
+                        ->label('Location'),
 
                     Forms\Components\Select::make('contract_type')
                         ->options([
