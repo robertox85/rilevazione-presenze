@@ -105,6 +105,22 @@ class UserAuthController extends Controller
 
     }
 
+    protected function getTempUrl($device_uuid, $userId){
+        $hashids = new Hashids(config('app.key'), 10);
+        $hashedId = $hashids->encode($userId);
+
+        // Semplifichiamo l'URL rimuovendo il callback per ora
+        $tempUrl = URL::temporarySignedRoute(
+            'temp.login',
+            now()->addMinutes(30),
+            [
+                'u' => $hashedId,
+                'device_uuid' => $device_uuid,
+            ]
+        );
+
+        return $tempUrl;
+    }
 
     public function login(Request $request)
     {
@@ -128,21 +144,10 @@ class UserAuthController extends Controller
                 ->first();
 
             if (!$device) {
-                $hashids = new Hashids(config('app.key'), 10);
-                $hashedId = $hashids->encode($user->id);
-
-                // Semplifichiamo l'URL rimuovendo il callback per ora
-                $tempUrl = URL::temporarySignedRoute(
-                    'temp.login',
-                    now()->addMinutes(30),
-                    [
-                        'u' => $hashedId,
-                        'device_uuid' => $request->device_uuid,
-                    ]
-                );
+                $tempUrl = $this->getTempUrl( $request->device_uuid, $user->id );
 
                 return response()->json([
-                    'message' => 'Device not authorized.',
+                    'message' => 'Device not authorized. Please register the device.',
                     'registration_url' => $tempUrl,
                     'expires_in' => 30, // minuti
                 ], 403);
@@ -191,6 +196,7 @@ class UserAuthController extends Controller
         return response()->json(['message' => 'You have been successfully logged out.'], 200);
 
     }
+
     public function checkOut(Request $request)
     {
         try {
@@ -203,59 +209,69 @@ class UserAuthController extends Controller
                 ->first();
 
             if (!$device) {
-                return response()->json(['error' => 'Dispositivo non autorizzato.'], 403);
+                return response()->json(['error' => 'Device not authorized.'], 403);
             }
 
             // Recupera l'utente e la sede associata
-            $user = $this->getUserWithLocation($request->user_id);
-            $location = $user->location;
-            $timezone = $location->timezone ?? 'UTC'; // Default a UTC se non configurato
+            $user = $request->user();
+            $today = Carbon::now();
 
-            // Trova la presenza di oggi per l'utente
+            // there is an attendance for today
             $attendance = Attendance::where('user_id', $user->id)
-                ->whereDate('date', now()->toDateString())
+                ->whereDate('date', $today->toDateString())
                 ->first();
 
             if (!$attendance) {
-                return response()->json(['error' => 'Attendance not found.'], 404);
+                return response()->json(['message' => 'Check-in not found for today.'], 404);
             }
 
             if ($attendance->check_out) {
-                return response()->json(['error' => 'Check-out already registered.'], 400);
+                return response()->json(['message' => 'Check-out already registered for today.'], 400);
             }
 
-            // Confronta orario di uscita con orario lavorativo della sede
-            $orarioCheckOut = Carbon::now($timezone);
+            $location = $user->location;
+            $timezone = $location->timezone ?? 'UTC';
+            $clientTimezone = $request->header('X-Timezone', 'UTC');
+            $checkOutTime = Carbon::createFromFormat('H:i:s', $request->check_out, $clientTimezone)
+                ->setTimezone($timezone)
+                ->startOfMinute();
 
-            if ($orarioCheckOut->lt(Carbon::parse($attendance->check_in))) {
-                return response()->json(['error' => 'Check-out time is before check-in time.'], 400);
-            }
+            // Ora attuale nel fuso orario della sede
+            $nowInLocationTimezone = Carbon::now($timezone)->startOfMinute();
 
-            // Controllo opzionale su coordinate di uscita (ad esempio distanza massima dalla sede)
+            // Verifica se oggi è un giorno lavorativo
+            $this->validateWorkingDay($location, $nowInLocationTimezone);
+
+            // Recupera gli orari lavorativi
+            $this->validateWorkingHours($location, $checkOutTime, $timezone, $nowInLocationTimezone);
+
             $isExternal = $user->contract_type === 'external';
             if (!$isExternal) {
                 $this->validateDistance($request->latitude, $request->longitude, $location);
             }
 
-            // Registra l'uscita
-            $attendance->check_out = $orarioCheckOut->format('H:i:s');
-            $attendance->check_out_latitude = $request->latitude;
-            $attendance->check_out_longitude = $request->longitude;
-            $attendance->save();
+            // Registra il check-out
+            $attendance->update([
+                'check_out' => $checkOutTime->format('H:i:s'),
+                'check_out_latitude' => $request->latitude,
+                'check_out_longitude' => $request->longitude,
+            ]);
 
             return response()->json([
                 'message' => 'Check-out successfully registered.',
-                'date' => now()->format('Y-m-d'),
-                'check_in' => $attendance->check_in,
-                'check_out' => $attendance->check_out,
-                'user' => $user->name . ' ' . $user->surname,
-            ]);
+                'device_uuid' => $request->device_uuid,
+                'user_id' => $user->id,
+                'date' => $today->toDateString(),
+                'check_out' => $checkOutTime->format('H:i:s'),
+                'timezone' => $location->timezone,
+            ], 200);
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
 
     // Method to handle user check-in
     public function checkIn(Request $request)
@@ -272,7 +288,12 @@ class UserAuthController extends Controller
                 ->first();
 
             if (!$device) {
-                return response()->json(['error' => 'Device not authorized.'], 403);
+                $tempUrl = $this->getTempUrl( $request->device_uuid, $user->id );
+                return response()->json([
+                    'message' => 'Device not authorized. Please register the device.',
+                    'registration_url' => $tempUrl,
+                    'expires_in' => 30, // minuti
+                ], 403);
             }
 
             $location = $user->location;
@@ -386,16 +407,11 @@ class UserAuthController extends Controller
                 'max:180',
                 'regex:/^-?\d{1,3}\.\d+$/',
             ],
-            'user_id' => [
+            'check_out' => [
                 'required',
-                'exists:users,id',
-                'integer',
+                'date_format:H:i:s',
             ],
-            // 'device_uuid' => [
-            //     'required',
-            //     'uuid',
-            //     'exists:devices,device_uuid',
-            // ],
+            'device_uuid' => 'required|uuid',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -480,7 +496,6 @@ class UserAuthController extends Controller
             throw $e;
         }
     }
-
 
 
     public function registerDevice(Request $request)
