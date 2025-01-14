@@ -86,7 +86,7 @@ class UserAuthController extends Controller
             $user = User::create($data);
 
             // assign role dipendente if exists
-            $user->assignRole('employee');
+            $user->assignRole('Employee');
 
             //$token = $user->createToken('my-app-token')->plainTextToken;
 

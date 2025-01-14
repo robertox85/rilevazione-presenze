@@ -15,7 +15,7 @@ class DevicePolicy
      */
     public function viewAny(User $user): bool
     {
-        if ($user->hasRole('employee')) {
+        if ($user->hasRole('Employee')) {
             return $user->devices()->exists();
         }
 
@@ -44,7 +44,7 @@ class DevicePolicy
     public function update(User $user, Device $device): bool
     {
         // Employee non può modificare i device
-        if ($user->hasRole('employee')) {
+        if ($user->hasRole('Employee')) {
             return false;
         }
 
@@ -57,7 +57,7 @@ class DevicePolicy
     public function delete(User $user, Device $device): bool
     {
         // Employee non può cancellare i device
-        if ($user->hasRole('employee')) {
+        if ($user->hasRole('Employee')) {
             return false;
         }
         return $user->can('delete_devices');
