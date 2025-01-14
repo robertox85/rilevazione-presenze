@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Models\Role;
 use BezhanSalleh\FilamentShield\FilamentShield;
 use Filament\Forms;
 use App\Models\User;
@@ -91,6 +92,12 @@ class UserResource extends Resource
         if (config('filament-users.shield') && class_exists(FilamentShield::class)) {
             $rows[] = Forms\Components\Select::make('roles')
                 ->relationship('roles', 'name')
+                // remove super_admin
+                ->options(function () {
+                    return Role::all()->filter(function ($role) {
+                        return $role->name !== 'super_admin';
+                    });
+                })
                 ->default([
                     '3'
                 ])
