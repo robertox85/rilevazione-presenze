@@ -132,6 +132,7 @@ class UserAuthController extends Controller
                 'device_uuid' => [
                     'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
                 ],
+                'device_name' => 'string|max:255',
             ]);
 
             $user = User::where('email', $request->email)->first();
@@ -140,6 +141,7 @@ class UserAuthController extends Controller
                     'message' => 'User not found.'
                 ], 401);
             }
+
             if (!Hash::check($request->password, $user->password)) {
                 return response()->json([
                     'message' => 'Invalid Credentials.'
@@ -151,13 +153,19 @@ class UserAuthController extends Controller
                 ->first();
 
             if (!$device) {
-                $tempUrl = $this->getTempUrl($request->device_uuid, $user->id);
+                // $tempUrl = $this->getTempUrl($request->device_uuid, $user->id);
+                // return response()->json([
+                //     'message' => 'Device not authorized. Please register the device.',
+                //     'registration_url' => $tempUrl,
+                //     'expires_in' => 30, // minuti
+                // ], 403);
 
-                return response()->json([
-                    'message' => 'Device not authorized. Please register the device.',
-                    'registration_url' => $tempUrl,
-                    'expires_in' => 30, // minuti
-                ], 403);
+                // Register the device automatically
+                $device = Device::create([
+                    'device_name' => 'Default',
+                    'device_uuid' => $request->device_uuid,
+                    'user_id' => $user->id,
+                ]);
             }
 
             if (!$user->active) {
