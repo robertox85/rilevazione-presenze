@@ -129,10 +129,12 @@ class UserAuthController extends Controller
             $request->validate([
                 'email' => 'required|email',
                 'password' => 'required',
+                // optional device uuid
                 'device_uuid' => [
+                    'nullable',
                     'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
                 ],
-                'device_name' => 'string|max:255',
+                'device_name' => 'nullable|string|max:255',
             ]);
 
             $user = User::where('email', $request->email)->first();
