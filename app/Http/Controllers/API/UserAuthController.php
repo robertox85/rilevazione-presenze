@@ -163,7 +163,7 @@ class UserAuthController extends Controller
 
                     // Register the device automatically
                     $device = Device::create([
-                        'device_name' => 'Default',
+                        'device_name' => $request->device_name ?? 'Unknown',
                         'device_uuid' => $request->device_uuid,
                         'user_id' => $user->id,
                     ]);
@@ -177,11 +177,11 @@ class UserAuthController extends Controller
                 ], 403);
             }
 
-            if ($user->devices->count() === 1 && $user->devices->first()->device_uuid !== $request->device_uuid) {
-                return response()->json([
-                    'message' => 'Only one device is allowed.'
-                ], 403);
-            }
+            // if ($user->devices->count() === 1 && $user->devices->first()->device_uuid !== $request->device_uuid) {
+            //     return response()->json([
+            //         'message' => 'Only one device is allowed.'
+            //     ], 403);
+            // }
 
             $token = $user->createToken($request->device_uuid)->plainTextToken;
 
