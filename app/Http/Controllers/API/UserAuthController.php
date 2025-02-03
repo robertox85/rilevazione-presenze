@@ -185,7 +185,7 @@ class UserAuthController extends Controller
             //     ], 403);
             // }
 
-            $token = $user->createToken($request->device_uuid)->plainTextToken;
+            $token = $user->createToken('my-app-token')->plainTextToken;
 
             return response()->json([
                 'message' => 'Login successful.',
