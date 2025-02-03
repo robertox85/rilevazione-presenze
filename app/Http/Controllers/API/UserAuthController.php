@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\URL;
 class UserAuthController extends Controller
 {
     private const DISTANCE_TOLERANCE = 20; // Tolleranza di 20 metri
+    private const REGEX_UUID = 'regex:/^[0-9a-fA-F]{16}$/';
 
     // Method to handle user authentication and token generation
     public function generateToken(Request $request)
@@ -132,7 +133,7 @@ class UserAuthController extends Controller
                 // optional device uuid
                 'device_uuid' => [
                     'nullable',
-                    'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
+                    'regex:' . self::REGEX_UUID
                 ],
                 'device_name' => 'nullable|string|max:255',
             ]);
@@ -427,7 +428,7 @@ class UserAuthController extends Controller
 
             'device_uuid' => [
                 'required',
-                'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
+                'regex:' . self::REGEX_UUID
             ],
 
             'device_name' => 'nullable|string|max:255',
@@ -463,7 +464,7 @@ class UserAuthController extends Controller
             ],
             'device_uuid' => [
                 'required',
-                'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
+                'regex:' . self::REGEX_UUID
             ],
         ];
 
@@ -559,7 +560,7 @@ class UserAuthController extends Controller
             'device_name' => 'required|string|max:255',
             'device_uuid' => [
                 'required',
-                'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
+                'regex:' . self::REGEX_UUID
             ],
             'user_id' => 'required|exists:users,id',
         ]);
