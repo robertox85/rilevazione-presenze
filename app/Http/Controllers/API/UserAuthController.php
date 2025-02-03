@@ -129,7 +129,9 @@ class UserAuthController extends Controller
             $request->validate([
                 'email' => 'required|email',
                 'password' => 'required',
-                'device_uuid' => 'required|uuid',
+                'device_uuid' => [
+                    'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
+                ],
             ]);
 
             $user = User::where('email', $request->email)->first();
