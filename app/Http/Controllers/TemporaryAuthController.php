@@ -86,9 +86,13 @@ class TemporaryAuthController extends Controller
                 'user_id' => $user->id,
             ]);
 
+
+
             return response()->json([
                 'message' => 'Device registered successfully.',
-                'status' => 'success'
+                'status' => 'success',
+                'user' => $user,
+                'device' => $device
             ]);
 
 

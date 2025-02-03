@@ -105,7 +105,8 @@ class UserAuthController extends Controller
 
     }
 
-    protected function getTempUrl($device_uuid, $userId){
+    protected function getTempUrl($device_uuid, $userId)
+    {
         $hashids = new Hashids(config('app.key'), 10);
         $hashedId = $hashids->encode($userId);
 
@@ -132,10 +133,14 @@ class UserAuthController extends Controller
             ]);
 
             $user = User::where('email', $request->email)->first();
-
-            if (!$user || !Hash::check($request->password, $user->password)) {
+            if (!$user) {
                 return response()->json([
-                    'message' => 'Invalid Credentials'
+                    'message' => 'User not found.'
+                ], 401);
+            }
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'message' => 'Invalid Credentials.'
                 ], 401);
             }
 
@@ -144,7 +149,7 @@ class UserAuthController extends Controller
                 ->first();
 
             if (!$device) {
-                $tempUrl = $this->getTempUrl( $request->device_uuid, $user->id );
+                $tempUrl = $this->getTempUrl($request->device_uuid, $user->id);
 
                 return response()->json([
                     'message' => 'Device not authorized. Please register the device.',
@@ -288,12 +293,20 @@ class UserAuthController extends Controller
                 ->first();
 
             if (!$device) {
-                $tempUrl = $this->getTempUrl( $request->device_uuid, $user->id );
-                return response()->json([
-                    'message' => 'Device not authorized. Please register the device.',
-                    'registration_url' => $tempUrl,
-                    'expires_in' => 30, // minuti
-                ], 403);
+                //$tempUrl = $this->getTempUrl($request->device_uuid, $user->id);
+                //return response()->json([
+                //    'message' => 'Device not authorized. Please register the device.',
+                //    'registration_url' => $tempUrl,
+                //    'expires_in' => 30, // minuti
+                //], 403);
+
+                // Register the device automatically
+                $device = Device::create([
+                    'device_name' => $request->device_name,
+                    'device_uuid' => $request->device_uuid,
+                    'user_id' => $user->id,
+                ]);
+
             }
 
             $location = $user->location;
@@ -380,7 +393,12 @@ class UserAuthController extends Controller
                 'required',
                 'date_format:H:i:s',
             ],
-            'device_uuid' => 'required|uuid',
+
+            'device_uuid' => [
+                'required',
+                'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
+            ],
+            'device_name' => 'string|max:255',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -411,7 +429,10 @@ class UserAuthController extends Controller
                 'required',
                 'date_format:H:i:s',
             ],
-            'device_uuid' => 'required|uuid',
+            'device_uuid' => [
+                'required',
+                'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
+            ],
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -419,6 +440,8 @@ class UserAuthController extends Controller
         if ($validator->fails()) {
             throw ValidationException::withMessages($validator->messages()->all());
         }
+
+
     }
 
     protected function getUserWithLocation(int $userId): User
@@ -502,7 +525,10 @@ class UserAuthController extends Controller
     {
         $request->validate([
             'device_name' => 'required|string|max:255',
-            'device_uuid' => 'required|uuid',
+            'device_uuid' => [
+                'required',
+                'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
+            ],
             'user_id' => 'required|exists:users,id',
         ]);
 

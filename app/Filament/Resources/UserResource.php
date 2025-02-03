@@ -91,7 +91,7 @@ class UserResource extends Resource
         if (config('filament-users.shield') && class_exists(FilamentShield::class)) {
             $rows[] = Forms\Components\Select::make('roles')
                 ->relationship('roles', 'name')
-
+                
                 ->default([
                     '3'
                 ])
