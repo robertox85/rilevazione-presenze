@@ -415,7 +415,8 @@ class UserAuthController extends Controller
                 'required',
                 'regex:/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i'
             ],
-            'device_name' => 'string|max:255',
+
+            'device_name' => 'nullable|string|max:255',
         ];
 
         $validator = Validator::make($request->all(), $rules);
