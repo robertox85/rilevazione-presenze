@@ -190,7 +190,8 @@ class UserAuthController extends Controller
             return response()->json([
                 'message' => 'Login successful.',
                 'token' => $token,
-                'device_name' => $device->device_name,
+                'user' => $user,
+                'device' => ($device) ? $device : null
             ], 200);
 
         } catch (\Exception $e) {
