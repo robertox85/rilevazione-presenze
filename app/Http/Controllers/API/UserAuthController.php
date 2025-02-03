@@ -150,6 +150,7 @@ class UserAuthController extends Controller
                 ], 401);
             }
 
+            $device = null;
             if($request->device_uuid !== null && $request->device_uuid !== ''){
                 $device = Device::where('user_id', $user->id)
                     ->where('device_uuid', $request->device_uuid)
