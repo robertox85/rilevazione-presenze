@@ -212,8 +212,6 @@ class UserAuthController extends Controller
 
         return response()->json([
             'user' => $user,
-            'location' => $location,
-            'timezone' => $timezone,
             'now' => $nowInLocationTimezone->toDateTimeString(),
         ], 200);
     }
