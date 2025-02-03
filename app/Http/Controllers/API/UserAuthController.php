@@ -133,7 +133,7 @@ class UserAuthController extends Controller
                 // optional device uuid
                 'device_uuid' => [
                     'nullable',
-                    'regex:' . self::REGEX_UUID
+                     self::REGEX_UUID
                 ],
                 'device_name' => 'nullable|string|max:255',
             ]);
@@ -428,7 +428,7 @@ class UserAuthController extends Controller
 
             'device_uuid' => [
                 'required',
-                'regex:' . self::REGEX_UUID
+                 self::REGEX_UUID
             ],
 
             'device_name' => 'nullable|string|max:255',
@@ -464,7 +464,7 @@ class UserAuthController extends Controller
             ],
             'device_uuid' => [
                 'required',
-                'regex:' . self::REGEX_UUID
+                self::REGEX_UUID
             ],
         ];
 
@@ -560,7 +560,7 @@ class UserAuthController extends Controller
             'device_name' => 'required|string|max:255',
             'device_uuid' => [
                 'required',
-                'regex:' . self::REGEX_UUID
+                self::REGEX_UUID
             ],
             'user_id' => 'required|exists:users,id',
         ]);
