@@ -192,7 +192,8 @@ class UserAuthController extends Controller
                 'message' => 'Login successful.',
                 'token' => $token,
                 'user' => $user,
-                'device' => ($device) ? $device : null
+                'device' => ($device) ? $device : null,
+                'location' => $user->location,
             ], 200);
 
         } catch (\Exception $e) {
@@ -201,6 +202,21 @@ class UserAuthController extends Controller
         }
     }
 
+
+    public function status( Request $request )
+    {
+        $user = $request->user();
+        $location = $user->location;
+        $timezone = $location->timezone ?? 'UTC';
+        $nowInLocationTimezone = Carbon::now($timezone)->startOfMinute();
+
+        return response()->json([
+            'user' => $user,
+            'location' => $location,
+            'timezone' => $timezone,
+            'now' => $nowInLocationTimezone->toDateTimeString(),
+        ], 200);
+    }
     // Method to handle user logout and token revocation
 
     public function logout(Request $request)
