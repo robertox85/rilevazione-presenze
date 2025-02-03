@@ -148,25 +148,28 @@ class UserAuthController extends Controller
                 ], 401);
             }
 
-            $device = Device::where('user_id', $user->id)
-                ->where('device_uuid', $request->device_uuid)
-                ->first();
+            if($request->device_uuid !== null && $request->device_uuid !== ''){
+                $device = Device::where('user_id', $user->id)
+                    ->where('device_uuid', $request->device_uuid)
+                    ->first();
 
-            if (!$device) {
-                // $tempUrl = $this->getTempUrl($request->device_uuid, $user->id);
-                // return response()->json([
-                //     'message' => 'Device not authorized. Please register the device.',
-                //     'registration_url' => $tempUrl,
-                //     'expires_in' => 30, // minuti
-                // ], 403);
+                if (!$device) {
+                    // $tempUrl = $this->getTempUrl($request->device_uuid, $user->id);
+                    // return response()->json([
+                    //     'message' => 'Device not authorized. Please register the device.',
+                    //     'registration_url' => $tempUrl,
+                    //     'expires_in' => 30, // minuti
+                    // ], 403);
 
-                // Register the device automatically
-                $device = Device::create([
-                    'device_name' => 'Default',
-                    'device_uuid' => $request->device_uuid,
-                    'user_id' => $user->id,
-                ]);
+                    // Register the device automatically
+                    $device = Device::create([
+                        'device_name' => 'Default',
+                        'device_uuid' => $request->device_uuid,
+                        'user_id' => $user->id,
+                    ]);
+                }
             }
+
 
             if (!$user->active) {
                 return response()->json([
