@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\AttendancesExporter;
 use App\Filament\Resources\AttendancesResource\Pages;
 use App\Filament\Resources\AttendancesResource\RelationManagers;
 use App\Models\Attendance;
@@ -9,6 +10,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -94,6 +96,10 @@ class AttendancesResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exporter(AttendancesExporter::class)
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
