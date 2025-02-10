@@ -61,10 +61,19 @@ class AttendancesResource extends Resource
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('User')
                     ->searchable()
-                    ->sortable()
+                    ->sortable(),
 
 
+                // Location is in the User model
+                Tables\Columns\TextColumn::make('user.location.name')
+                    ->label('Location')
+                    ->searchable()
+                    ->sortable(),
 
+                Tables\Columns\TextColumn::make('date')
+                    ->label('Date')
+                    ->searchable()
+                    ->sortable(),
 
             ])
             ->filters([
