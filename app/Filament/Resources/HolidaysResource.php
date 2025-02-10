@@ -25,9 +25,12 @@ class HolidaysResource extends Resource
     {
         return $form
             ->schema([
+
+
                 Forms\Components\Select::make('location_id')
-                    ->relationship('location', 'country_code')
+                    ->relationship('location', 'name')
                     ->required(),
+
                 Forms\Components\DatePicker::make('holiday_date')
                     ->required(),
                 Forms\Components\TextInput::make('description')
