@@ -59,7 +59,7 @@ class AttendancesResource extends Resource
                 // Date
 
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('User')
+                    ->label('Name')
                     ->searchable()
                     ->sortable(),
 
@@ -73,6 +73,18 @@ class AttendancesResource extends Resource
                 // check in formatted as date time (d/m/Y H:i)
                 Tables\Columns\TextColumn::make('check_in')
                     ->label('Check In')
+                    ->searchable()
+                    ->sortable(),
+
+                // check out formatted as date time (d/m/Y H:i)
+                Tables\Columns\TextColumn::make('check_out')
+                    ->label('Check Out')
+                    ->searchable()
+                    ->sortable(),
+
+                // device name
+                Tables\Columns\TextColumn::make('device.name')
+                    ->label('Device')
                     ->searchable()
                     ->sortable(),
 
