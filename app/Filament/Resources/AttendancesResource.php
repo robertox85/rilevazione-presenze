@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Exports\AttendancesExporter;
+use App\Filament\Exports\AttendanceExporter;
+
 use App\Filament\Resources\AttendancesResource\Pages;
 use App\Filament\Resources\AttendancesResource\RelationManagers;
 use App\Models\Attendance;
@@ -99,7 +100,7 @@ class AttendancesResource extends Resource
             ])
             ->headerActions([
                 ExportAction::make()
-                    ->exporter(AttendancesExporter::class)
+                    ->exporter(AttendanceExporter::class)
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
