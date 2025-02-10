@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\URL;
 
 class UserAuthController extends Controller
 {
-    private const DISTANCE_TOLERANCE = 20; // Tolleranza di 20 metri
+    private const DISTANCE_TOLERANCE = 150; // Tolleranza di 20 metri
     private const REGEX_UUID = 'regex:/^[0-9a-fA-F]{16}$/';
 
     // Method to handle user authentication and token generation
