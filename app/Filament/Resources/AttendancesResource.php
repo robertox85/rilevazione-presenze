@@ -54,43 +54,35 @@ class AttendancesResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                // user.name
+                // Location.name
+                // Date
 
+                Tables\Columns\TextColumn::make('user_id')
+
+                    ->label('User')
+                    ->searchable()
+                    ->sortable()
+                    ->default(function ($value, $record) {
+                        return $record->user->name;
+                    }),
+
+                Tables\Columns\TextColumn::make('device_id')
+                    ->label('Device')
+                    ->searchable()
+                    ->sortable()
+                    ->default(function ($value, $record) {
+                        return $record->device->name;
+                    }),
+
+                Tables\Columns\TextColumn::make('date')
+                    ->label('Date')
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('device_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('date')
-                    ->date()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('check_in'),
-                Tables\Columns\TextColumn::make('check_out'),
-                Tables\Columns\TextColumn::make('check_in_latitude')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('check_in_longitude')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('check_out_latitude')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('check_out_longitude')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+
+
+
             ])
             ->filters([
                 //
