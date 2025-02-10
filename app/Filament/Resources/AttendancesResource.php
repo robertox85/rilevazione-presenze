@@ -83,7 +83,7 @@ class AttendancesResource extends Resource
                     ->sortable(),
 
                 // device name
-                Tables\Columns\TextColumn::make('device.name')
+                Tables\Columns\TextColumn::make('device.device_name')
                     ->label('Device')
                     ->searchable()
                     ->sortable(),
