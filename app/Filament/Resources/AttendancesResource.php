@@ -70,9 +70,13 @@ class AttendancesResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('date')
-                    ->label('Date')
+                // check in formatted as date time (d/m/Y H:i)
+                Tables\Columns\TextColumn::make('check_in')
+                    ->label('Check In')
                     ->searchable()
+                    ->formatState(function ($value, $record) {
+                        return $record->check_in->format('d/m/Y H:i');
+                    })
                     ->sortable(),
 
             ])
