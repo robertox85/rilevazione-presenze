@@ -245,9 +245,7 @@ class UserAuthController extends Controller
                 ->where('device_uuid', $request->device_uuid)
                 ->first();
 
-            if (!$device) {
-                return response()->json(['error' => 'Device not authorized.'], 403);
-            }
+
 
             // Recupera l'utente e la sede associata
             $user = $request->user();
