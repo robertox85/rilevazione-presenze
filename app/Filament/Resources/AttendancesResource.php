@@ -54,9 +54,11 @@ class AttendancesResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user_id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('name')
+
+                    ->searchable()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('device_id')
                     ->numeric()
                     ->sortable(),
