@@ -58,27 +58,10 @@ class AttendancesResource extends Resource
                 // Location.name
                 // Date
 
-                Tables\Columns\TextColumn::make('user_id')
-
+                Tables\Columns\TextColumn::make('user.name')
                     ->label('User')
                     ->searchable()
                     ->sortable()
-                    ->default(function ($value, $record) {
-                        return $record->user->name;
-                    }),
-
-                Tables\Columns\TextColumn::make('device_id')
-                    ->label('Device')
-                    ->searchable()
-                    ->sortable()
-                    ->default(function ($value, $record) {
-                        return $record->device->name;
-                    }),
-
-                Tables\Columns\TextColumn::make('date')
-                    ->label('Date')
-                    ->searchable()
-                    ->sortable(),
 
 
 
