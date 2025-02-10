@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\AttendanceExporter;
+
 use App\Filament\Resources\AttendancesResource\Pages;
 use App\Filament\Resources\AttendancesResource\RelationManagers;
 use App\Models\Attendance;
@@ -9,6 +11,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -54,47 +57,50 @@ class AttendancesResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user_id')
-                    ->numeric()
+                // user.name
+                // Location.name
+                // Date
+
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Name')
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('device_id')
-                    ->numeric()
+
+
+                // Location is in the User model
+                Tables\Columns\TextColumn::make('user.location.name')
+                    ->label('Location')
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('date')
-                    ->date()
+
+                // check in formatted as date time (d/m/Y H:i)
+                Tables\Columns\TextColumn::make('check_in')
+                    ->label('Check In')
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('check_in'),
-                Tables\Columns\TextColumn::make('check_out'),
-                Tables\Columns\TextColumn::make('check_in_latitude')
-                    ->numeric()
+
+                // check out formatted as date time (d/m/Y H:i)
+                Tables\Columns\TextColumn::make('check_out')
+                    ->label('Check Out')
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('check_in_longitude')
-                    ->numeric()
+
+                // device name
+                Tables\Columns\TextColumn::make('device.device_name')
+                    ->label('Device')
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('check_out_latitude')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('check_out_longitude')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exporter(AttendanceExporter::class)
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -37,6 +37,8 @@ Route::get('/device-registration-complete', function (Request $request) {
 Route::post('login', [UserAuthController::class, 'login']);
 Route::post('logout', [UserAuthController::class, 'logout'])->middleware('auth:sanctum');
 
+Route::get('status', [UserAuthController::class, 'status'])->middleware('auth:sanctum');
+
 Route::post('/reset', function (Request $request) {
 
     DB::statement('SET FOREIGN_KEY_CHECKS=0;');

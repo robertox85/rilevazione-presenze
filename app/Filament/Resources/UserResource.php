@@ -91,9 +91,9 @@ class UserResource extends Resource
         if (config('filament-users.shield') && class_exists(FilamentShield::class)) {
             $rows[] = Forms\Components\Select::make('roles')
                 ->relationship('roles', 'name')
-
+                
                 ->default([
-                    '2'
+                    '3'
                 ])
                 ->selectablePlaceholder(false)
                 ->label(trans('filament-users::user.resource.roles'));
@@ -111,8 +111,7 @@ class UserResource extends Resource
 
                     Forms\Components\Select::make('location_id')
                         ->relationship('location', 'name')
-                        ->label('Location')
-                        ->required(),
+                        ->label('Location'),
 
                     Forms\Components\Select::make('contract_type')
                         ->options([

@@ -25,7 +25,8 @@ use Illuminate\Support\Facades\URL;
 
 class UserAuthController extends Controller
 {
-    private const DISTANCE_TOLERANCE = 20; // Tolleranza di 20 metri
+    private const DISTANCE_TOLERANCE = 150; // Tolleranza di 20 metri
+    private const REGEX_UUID = 'regex:/^[0-9a-fA-F]{16}$/';
 
     // Method to handle user authentication and token generation
     public function generateToken(Request $request)
@@ -86,7 +87,7 @@ class UserAuthController extends Controller
             $user = User::create($data);
 
             // assign role dipendente if exists
-            $user->assignRole('employee');
+            $user->assignRole('Employee');
 
             //$token = $user->createToken('my-app-token')->plainTextToken;
 
@@ -105,7 +106,8 @@ class UserAuthController extends Controller
 
     }
 
-    protected function getTempUrl($device_uuid, $userId){
+    protected function getTempUrl($device_uuid, $userId)
+    {
         $hashids = new Hashids(config('app.key'), 10);
         $hashedId = $hashids->encode($userId);
 
@@ -128,30 +130,50 @@ class UserAuthController extends Controller
             $request->validate([
                 'email' => 'required|email',
                 'password' => 'required',
-                'device_uuid' => 'required|uuid',
+                // optional device uuid
+                'device_uuid' => [
+                    'nullable',
+                     self::REGEX_UUID
+                ],
+                'device_name' => 'nullable|string|max:255',
             ]);
 
             $user = User::where('email', $request->email)->first();
-
-            if (!$user || !Hash::check($request->password, $user->password)) {
+            if (!$user) {
                 return response()->json([
-                    'message' => 'Invalid Credentials'
+                    'message' => 'User not found.'
                 ], 401);
             }
 
-            $device = Device::where('user_id', $user->id)
-                ->where('device_uuid', $request->device_uuid)
-                ->first();
-
-            if (!$device) {
-                $tempUrl = $this->getTempUrl( $request->device_uuid, $user->id );
-
+            if (!Hash::check($request->password, $user->password)) {
                 return response()->json([
-                    'message' => 'Device not authorized. Please register the device.',
-                    'registration_url' => $tempUrl,
-                    'expires_in' => 30, // minuti
-                ], 403);
+                    'message' => 'Invalid Credentials.'
+                ], 401);
             }
+
+            $device = null;
+            if($request->device_uuid !== null && $request->device_uuid !== ''){
+                $device = Device::where('user_id', $user->id)
+                    ->where('device_uuid', $request->device_uuid)
+                    ->first();
+
+                if (!$device) {
+                    // $tempUrl = $this->getTempUrl($request->device_uuid, $user->id);
+                    // return response()->json([
+                    //     'message' => 'Device not authorized. Please register the device.',
+                    //     'registration_url' => $tempUrl,
+                    //     'expires_in' => 30, // minuti
+                    // ], 403);
+
+                    // Register the device automatically
+                    $device = Device::create([
+                        'device_name' => $request->device_name ?? 'Unknown',
+                        'device_uuid' => $request->device_uuid,
+                        'user_id' => $user->id,
+                    ]);
+                }
+            }
+
 
             if (!$user->active) {
                 return response()->json([
@@ -159,18 +181,20 @@ class UserAuthController extends Controller
                 ], 403);
             }
 
-            if ($user->devices->count() === 1 && $user->devices->first()->device_uuid !== $request->device_uuid) {
-                return response()->json([
-                    'message' => 'Only one device is allowed.'
-                ], 403);
-            }
+            // if ($user->devices->count() === 1 && $user->devices->first()->device_uuid !== $request->device_uuid) {
+            //     return response()->json([
+            //         'message' => 'Only one device is allowed.'
+            //     ], 403);
+            // }
 
-            $token = $user->createToken($request->device_uuid)->plainTextToken;
+            $token = $user->createToken('my-app-token')->plainTextToken;
 
             return response()->json([
                 'message' => 'Login successful.',
                 'token' => $token,
-                'device_name' => $device->device_name,
+                'user' => $user,
+                'device' => ($device) ? $device : null,
+                'location' => $user->location,
             ], 200);
 
         } catch (\Exception $e) {
@@ -179,6 +203,19 @@ class UserAuthController extends Controller
         }
     }
 
+
+    public function status( Request $request )
+    {
+        $user = $request->user();
+        $location = $user->location;
+        $timezone = $location->timezone ?? 'UTC';
+        $nowInLocationTimezone = Carbon::now($timezone)->startOfMinute();
+
+        return response()->json([
+            'user' => $user,
+            'now' => $nowInLocationTimezone->toDateTimeString(),
+        ], 200);
+    }
     // Method to handle user logout and token revocation
 
     public function logout(Request $request)
@@ -208,9 +245,7 @@ class UserAuthController extends Controller
                 ->where('device_uuid', $request->device_uuid)
                 ->first();
 
-            if (!$device) {
-                return response()->json(['error' => 'Device not authorized.'], 403);
-            }
+
 
             // Recupera l'utente e la sede associata
             $user = $request->user();
@@ -288,12 +323,20 @@ class UserAuthController extends Controller
                 ->first();
 
             if (!$device) {
-                $tempUrl = $this->getTempUrl( $request->device_uuid, $user->id );
-                return response()->json([
-                    'message' => 'Device not authorized. Please register the device.',
-                    'registration_url' => $tempUrl,
-                    'expires_in' => 30, // minuti
-                ], 403);
+                //$tempUrl = $this->getTempUrl($request->device_uuid, $user->id);
+                //return response()->json([
+                //    'message' => 'Device not authorized. Please register the device.',
+                //    'registration_url' => $tempUrl,
+                //    'expires_in' => 30, // minuti
+                //], 403);
+
+                // Register the device automatically
+                $device = Device::create([
+                    'device_name' => $request->device_name,
+                    'device_uuid' => $request->device_uuid,
+                    'user_id' => $user->id,
+                ]);
+
             }
 
             $location = $user->location;
@@ -380,7 +423,13 @@ class UserAuthController extends Controller
                 'required',
                 'date_format:H:i:s',
             ],
-            'device_uuid' => 'required|uuid',
+
+            'device_uuid' => [
+                'required',
+                 self::REGEX_UUID
+            ],
+
+            'device_name' => 'nullable|string|max:255',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -411,7 +460,10 @@ class UserAuthController extends Controller
                 'required',
                 'date_format:H:i:s',
             ],
-            'device_uuid' => 'required|uuid',
+            'device_uuid' => [
+                'required',
+                self::REGEX_UUID
+            ],
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -419,6 +471,8 @@ class UserAuthController extends Controller
         if ($validator->fails()) {
             throw ValidationException::withMessages($validator->messages()->all());
         }
+
+
     }
 
     protected function getUserWithLocation(int $userId): User
@@ -502,7 +556,10 @@ class UserAuthController extends Controller
     {
         $request->validate([
             'device_name' => 'required|string|max:255',
-            'device_uuid' => 'required|uuid',
+            'device_uuid' => [
+                'required',
+                self::REGEX_UUID
+            ],
             'user_id' => 'required|exists:users,id',
         ]);
 
