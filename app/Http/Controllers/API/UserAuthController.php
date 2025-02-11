@@ -266,10 +266,11 @@ class UserAuthController extends Controller
 
             $location = $user->location;
             $timezone = $location->timezone ?? 'UTC';
-            $clientTimezone = $request->header('X-Timezone', 'UTC');
-            $checkOutTime = Carbon::createFromFormat('H:i:s', $request->check_out, $clientTimezone)
-                ->setTimezone($timezone)
+
+            // ASSUNZIONE: l'orario inviato dal client è già espresso nel fuso orario della sede.
+            $checkOutTime = Carbon::createFromFormat('H:i:s', $request->check_out, $timezone)
                 ->startOfMinute();
+
 
             // Ora attuale nel fuso orario della sede
             $nowInLocationTimezone = Carbon::now($timezone)->startOfMinute();
@@ -277,7 +278,7 @@ class UserAuthController extends Controller
             // Verifica se oggi è un giorno lavorativo
             $this->validateWorkingDay($location, $nowInLocationTimezone);
 
-            // Recupera gli orari lavorativi
+            // Recupera e valida gli orari lavorativi
             $this->validateWorkingHours($location, $checkOutTime, $timezone, $nowInLocationTimezone);
 
             $isExternal = $user->contract_type === 'external';
@@ -293,12 +294,12 @@ class UserAuthController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Check-out successfully registered.',
+                'message'     => 'Check-out successfully registered.',
                 'device_uuid' => $request->device_uuid,
-                'user_id' => $user->id,
-                'date' => $today->toDateString(),
-                'check_out' => $checkOutTime->format('H:i:s'),
-                'timezone' => $location->timezone,
+                'user_id'     => $user->id,
+                'date'        => $today->toDateString(),
+                'check_out'   => $checkOutTime->format('H:i:s'),
+                'timezone'    => $location->timezone,
             ], 200);
 
         } catch (\Exception $e) {
@@ -323,13 +324,6 @@ class UserAuthController extends Controller
                 ->first();
 
             if (!$device) {
-                //$tempUrl = $this->getTempUrl($request->device_uuid, $user->id);
-                //return response()->json([
-                //    'message' => 'Device not authorized. Please register the device.',
-                //    'registration_url' => $tempUrl,
-                //    'expires_in' => 30, // minuti
-                //], 403);
-
                 // Register the device automatically
                 $device = Device::create([
                     'device_name' => $request->device_name,
@@ -341,16 +335,15 @@ class UserAuthController extends Controller
 
             $location = $user->location;
 
-            $timezone = $location->timezone ?? 'UTC';
-            $clientTimezone = $request->header('X-Timezone', 'UTC');
-            $checkInTime = Carbon::createFromFormat('H:i:s', $request->check_in, $clientTimezone)
-                ->setTimezone($timezone)
-                ->startOfMinute();
+            // Recupera il fuso orario della sede dell'utente
+            $timezone = $user->location->timezone ?? 'UTC';
 
+           // ASSUNZIONE: l'orario inviato dal client è già espresso nel fuso orario della sede.
+            $checkInTime = Carbon::createFromFormat('H:i:s', $request->check_in, $timezone)
+                ->startOfMinute();
 
             // Ora attuale nel fuso orario della sede
             $nowInLocationTimezone = Carbon::now($timezone)->startOfMinute();
-
 
             // Verifica se oggi è un giorno lavorativo
             $this->validateWorkingDay($location, $nowInLocationTimezone);
