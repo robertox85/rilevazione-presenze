@@ -338,10 +338,12 @@ class UserAuthController extends Controller
 
             // Ora del check-in nel fuso orario del client
             Log::info('Client timezone: ' . $request->header('X-Timezone', 'UTC'));
-            Log::info('Check-in time: ' . $request->check_in);
+            Log::info('Raw check-in request time: ' . $request->check_in);
             Log::info('Client time: ' . Carbon::now($request->header('X-Timezone', 'UTC'))->toDateTimeString());
+            Log::info('Client timezone header: ' . $request->header('X-Timezone', 'Not provided'));
             Log::info('Server time: ' . Carbon::now($timezone)->toDateTimeString());
             Log::info('Location timezone: ' . $timezone);
+
 
 
             $clientTimezone = $request->header('X-Timezone', 'UTC');
