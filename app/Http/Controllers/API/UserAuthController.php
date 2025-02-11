@@ -345,7 +345,7 @@ class UserAuthController extends Controller
 
 
             $clientTimezone = $request->header('X-Timezone', 'UTC');
-            $checkInTime = Carbon::createFromFormat('H:i:s', $request->check_in, $clientTimezone)
+            $checkInTime = Carbon::createFromFormat('Y-m-d H:i:s', now($clientTimezone)->toDateString() . ' ' . $request->check_in, $clientTimezone)
                 ->setTimezone($timezone)
                 ->startOfMinute();
 
