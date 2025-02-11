@@ -334,15 +334,24 @@ class UserAuthController extends Controller
 
             $location = $user->location;
 
-            $timezone = $location->timezone ?? 'UTC';
+            // Recupera il fuso orario della sede dell'utente
+            $timezone = $user->location->timezone ?? 'UTC';
 
+            // Controlla se il client ha inviato il fuso orario tramite header
+            $clientTimezone = $request->header('X-Timezone');
 
-
-            $clientTimezone = $request->header('X-Timezone', 'UTC');
-            $checkInTime = Carbon::createFromFormat('H:i:s', $request->check_in, 'UTC')
-                ->setTimezone($timezone) // Converti nel fuso orario della sede dell'utente
-                ->startOfMinute();
-
+            // Se il client invia il fuso orario, usalo per convertire l'orario nel fuso orario della sede.
+            // Altrimenti, supponi che il check-in sia già nel fuso orario della sede.
+            if ($clientTimezone) {
+                $checkInTime = Carbon::createFromFormat('H:i:s', $request->check_in, $clientTimezone)
+                    ->setTimezone($timezone)
+                    ->startOfMinute();
+            } else {
+                $checkInTime = Carbon::createFromFormat('H:i:s', $request->check_in, $timezone)
+                    ->startOfMinute();
+            }
+            Log::info("Sede timezone: " . $timezone);
+            Log::info("Check-in time in sede timezone: " . $checkInTime->toDateTimeString());
 
             // Ora attuale nel fuso orario della sede
             $nowInLocationTimezone = Carbon::now($timezone)->startOfMinute();
@@ -368,15 +377,6 @@ class UserAuthController extends Controller
             }
 
 
-            // Ora del check-in nel fuso orario del client
-            Log::info('Client timezone: ' . $request->header('X-Timezone', 'UTC'));
-            Log::info('Raw check-in request time: ' . $request->check_in);
-            Log::info('Client time: ' . Carbon::now($request->header('X-Timezone', 'UTC'))->toDateTimeString());
-            Log::info('Client timezone header: ' . $request->header('X-Timezone', 'Not provided'));
-            Log::info('Server time: ' . Carbon::now($timezone)->toDateTimeString());
-            Log::info('Location timezone: ' . $timezone);
-            Log::info('Now in location timezone: ' . $nowInLocationTimezone->toDateTimeString());
-            Log::info('Check-in time in location timezone: ' . $checkInTime->toDateTimeString());
 
             // Registra il nuovo check-in
             Attendance::create([
