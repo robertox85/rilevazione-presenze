@@ -73,16 +73,30 @@ class AttendancesResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                // check in formatted as date time (d/m/Y H:i)
-                Tables\Columns\TextColumn::make('check_in')
-                    ->label('Check In')
+                // Two columns for the date, date and day
+                Tables\Columns\TextColumn::make('date')
+                    ->label('Date')
                     ->searchable()
                     ->sortable(),
+
+
+                // Only the time of the check in
+                Tables\Columns\TextColumn::make('check_in')
+                    ->label('Check In')
+                    ->formatStateUsing(function ($state) {
+                        return date('H:i', strtotime($state));
+                    })
+                    ->searchable()
+                ->sortable()
+                    ,
 
                 // check out formatted as date time (d/m/Y H:i)
                 Tables\Columns\TextColumn::make('check_out')
                     ->label('Check Out')
                     ->searchable()
+                    ->formatStateUsing(function ($state) {
+                        return date('H:i', strtotime($state));
+                    })
                     ->sortable(),
 
                 // device name
