@@ -273,6 +273,12 @@ class UserAuthController extends Controller
             $this->validateWorkingHours($location, $checkOutTime, 'UTC', Carbon::now());
 
             // Verifica la distanza
+
+            Log::info('isExternal: ' . $isExternal);
+            Log::info('latitude: ' . $request->latitude);
+            Log::info('longitude: ' . $request->longitude);
+            Log::info('location: ' . $location);
+
             if (!$isExternal) {
                 $this->validateDistance($request->latitude, $request->longitude, $location);
             }
@@ -338,6 +344,7 @@ class UserAuthController extends Controller
             $this->validateWorkingHours($location, $request->check_in, 'UTC', Carbon::now());
 
             Log::info('isExternal: ' . $isExternal);
+
             // Verifica la distanza
             if (!$isExternal) {
                 $this->validateDistance($request->latitude, $request->longitude, $location);
