@@ -238,22 +238,14 @@ class UserAuthController extends Controller
     {
         try {
 
-            // Validazione dei dati
+           // Validazione richiesta
             $this->validateCheckOutRequest($request);
 
-            $device = Device::where('user_id', $request->user_id)
-                ->where('device_uuid', $request->device_uuid)
-                ->first();
-
-
-
-            // Recupera l'utente e la sede associata
+            // Recupera presenza di oggi per questo utente
             $user = $request->user();
-            $today = Carbon::now();
-
-            // there is an attendance for today
+            $isExternal = $user->contract_type === 'external';
             $attendance = Attendance::where('user_id', $user->id)
-                ->whereDate('date', $today->toDateString())
+                ->whereDate('date', Carbon::now()->toDateString())
                 ->first();
 
             if (!$attendance) {
@@ -264,24 +256,23 @@ class UserAuthController extends Controller
                 return response()->json(['message' => 'Check-out already registered for today.'], 400);
             }
 
-            $location = $user->location;
-            $timezone = $location->timezone ?? 'UTC';
-
-            // ASSUNZIONE: l'orario inviato dal client è già espresso nel fuso orario della sede.
-            $checkOutTime = Carbon::createFromFormat('H:i:s', $request->check_out, $timezone)
+            // Converti l'orario di check-out in un oggetto Carbon UTC
+            $checkOutTime = Carbon::createFromFormat('H:i:s', $request->check_out, 'UTC')
                 ->startOfMinute();
 
-
-            // Ora attuale nel fuso orario della sede
-            $nowInLocationTimezone = Carbon::now($timezone)->startOfMinute();
+            // verifica se sta uscendo prima dell'orario di check-in
+            if ($checkOutTime->lt(Carbon::parse($attendance->check_in))) {
+                throw new \Exception('Check-out time is earlier than check-in time.');
+            }
 
             // Verifica se oggi è un giorno lavorativo
-            $this->validateWorkingDay($location, $nowInLocationTimezone);
+            $location = $user->location;
+            $this->validateWorkingDay($location, Carbon::now());
 
-            // Recupera e valida gli orari lavorativi
-            $this->validateWorkingHours($location, $checkOutTime, $timezone, $nowInLocationTimezone);
+            // Verifica l'orario di check-out
+            $this->validateWorkingHours($location, $checkOutTime, 'UTC', Carbon::now());
 
-            $isExternal = $user->contract_type === 'external';
+            // Verifica la distanza
             if (!$isExternal) {
                 $this->validateDistance($request->latitude, $request->longitude, $location);
             }
@@ -293,13 +284,12 @@ class UserAuthController extends Controller
                 'check_out_longitude' => $request->longitude,
             ]);
 
+
             return response()->json([
-                'message'     => 'Check-out successfully registered.',
-                'device_uuid' => $request->device_uuid,
-                'user_id'     => $user->id,
-                'date'        => $today->toDateString(),
-                'check_out'   => $checkOutTime->format('H:i:s'),
-                'timezone'    => $location->timezone,
+                'message' => 'Check-out successfully registered.',
+                'user_id' => $user->id,
+                'date' => Carbon::now()->toDateString(),
+                'check_out' => $checkOutTime->format('H:i:s'),
             ], 200);
 
         } catch (\Exception $e) {
@@ -313,75 +303,60 @@ class UserAuthController extends Controller
     public function checkIn(Request $request)
     {
         try {
-            // Validazione dei dati
+
+            // validazione richiesta
             $this->validateCheckInRequest($request);
 
-            // Recupera l'utente autenticato
-            $user = $request->user();
+            // Recupera il device dell'utente e se non esiste lo crea
+            $device = Device::firstOrCreate([
+                'device_uuid' => $request->device_uuid,
+                'user_id' => $request->user()->id,
+            ], [
+                'device_name' => $request->device_name ?? 'Unknown',
+            ]);
 
-            $device = Device::where('user_id', $user->id)
-                ->where('device_uuid', $request->device_uuid)
+            // Recupera l'utente con la posizione
+            $user = $this->getUserWithLocation($request->user()->id);
+
+            // Verifica se l'utente è esterno
+            $isExternal = $user->contract_type === 'external';
+
+            // Verifica se l'utente ha già effettuato il check-in per oggi
+            $attendance = Attendance::where('user_id', $user->id)
+                ->whereDate('date', Carbon::now()->toDateString())
                 ->first();
 
-            if (!$device) {
-                // Register the device automatically
-                $device = Device::create([
-                    'device_name' => $request->device_name,
-                    'device_uuid' => $request->device_uuid,
-                    'user_id' => $user->id,
-                ]);
-
+            if ($attendance) {
+                return response()->json(['message' => 'Check-in already registered for today.'], 400);
             }
 
-            $location = $user->location;
-
-            // Recupera il fuso orario della sede dell'utente
-            $timezone = $user->location->timezone ?? 'UTC';
-
-           // ASSUNZIONE: l'orario inviato dal client è già espresso nel fuso orario della sede.
-            $checkInTime = Carbon::createFromFormat('H:i:s', $request->check_in, $timezone)
-                ->startOfMinute();
-
-            // Ora attuale nel fuso orario della sede
-            $nowInLocationTimezone = Carbon::now($timezone)->startOfMinute();
-
             // Verifica se oggi è un giorno lavorativo
-            $this->validateWorkingDay($location, $nowInLocationTimezone);
+            $location = $user->location;
+            $this->validateWorkingDay($location, Carbon::now());
 
-            // Recupera gli orari lavorativi
-            $this->validateWorkingHours($location, $checkInTime, $timezone, $nowInLocationTimezone);
+            // Verifica l'orario di check-in
+            $this->validateWorkingHours($location, $request->check_in, 'UTC', Carbon::now());
 
-            $isExternal = $user->contract_type === 'external';
+            // Verifica la distanza
             if (!$isExternal) {
                 $this->validateDistance($request->latitude, $request->longitude, $location);
             }
 
-            // Registra la presenza, ma solo se non esiste già per oggi
-            $attendance = Attendance::where('user_id', $user->id)
-                ->whereDate('date', $checkInTime->toDateString())
-                ->first();
-
-            if ($attendance) {
-                throw new \Exception('Check-in already registered for today.');
-            }
-
-            // Registra il nuovo check-in
-            Attendance::create([
+            // Registra il check-in
+            $attendance = Attendance::create([
                 'user_id' => $user->id,
                 'device_id' => $device->id,
-                'date' => $checkInTime->toDateString(),
-                'check_in' => $checkInTime->format('H:i:s'),
+                'date' => Carbon::now()->toDateString(),
+                'check_in' => $request->check_in,
                 'check_in_latitude' => $request->latitude,
                 'check_in_longitude' => $request->longitude,
             ]);
 
             return response()->json([
                 'message' => 'Check-in successfully registered.',
-                'device_uuid' => $request->device_uuid,
                 'user_id' => $user->id,
-                'date' => $checkInTime->toDateString(),
-                'check_in' => $checkInTime->format('H:i:s'),
-                'timezone' => $location->timezone,
+                'date' => Carbon::now()->toDateString(),
+                'check_in' => $request->check_in,
             ], 201);
 
 
@@ -473,7 +448,7 @@ class UserAuthController extends Controller
         $user = User::with('location')->find($userId);
 
         if (!$user || !$user->location) {
-            throw new \Exception('User not found or missing related data.');
+            throw new \Exception('User not found or missing location.');
         }
 
         return $user;
@@ -481,6 +456,8 @@ class UserAuthController extends Controller
 
     protected function validateWorkingDay($location, $nowInLocationTimezone): void
     {
+
+
         if (!$location->working_days) {
             throw new \Exception('Working days not configured.');
         }
@@ -496,45 +473,29 @@ class UserAuthController extends Controller
 
         try {
             $timestamps = [
-                'check_in' => Carbon::parse($checkIn, $timezone),
-                'work_start' => Carbon::parse($location->working_start_time, $timezone)->subMinutes($margin),
-                'work_end' => Carbon::parse($location->working_end_time, $timezone)->addMinutes($margin),
+                'check_in' => Carbon::parse($checkIn)->startOfMinute(),
+                'work_start' => Carbon::parse($location->working_start_time, $timezone)->subMinutes($margin)->startOfMinute(),
+                'work_end' => Carbon::parse($location->working_end_time, $timezone)->addMinutes($margin)->startOfMinute(),
                 'now' => $nowInLocationTimezone
             ];
 
-            // Normalizziamo tutti i timestamp al minuto
-            foreach ($timestamps as &$timestamp) {
-                $timestamp->startOfMinute();
+
+            if ($timestamps['now']->lt($timestamps['work_start'])) {
+                throw new \Exception('Too early to check-in.');
             }
 
-            Log::info('Time validations', [
-                'check_in' => $timestamps['check_in']->toDateTimeString(),
-                'work_hours' => [
-                    'start' => $timestamps['work_start']->toDateTimeString(),
-                    'end' => $timestamps['work_end']->toDateTimeString()
-                ],
-                'now' => $timestamps['now']->toDateTimeString()
-            ]);
-
-            // Validazione orario di lavoro con margine
-            if ($timestamps['check_in']->lt($timestamps['work_start']) ||
-                $timestamps['check_in']->gt($timestamps['work_end'])) {
-                throw ValidationException::withMessages([
-
-                    'check_in' => ['Check-in time is outside working hours.'],
-
-                ]);
+            if ($timestamps['now']->gt($timestamps['work_end'])) {
+                throw new \Exception('Too late to check-in.');
             }
 
-            // Validazione check-in nel passato
-            if ($timestamps['check_in']->lt($timestamps['now'])) {
-                throw ValidationException::withMessages([
-
-                    'check_in' => ['Check-in time cannot be in the past.'],
-
-                ]);
-
+            if ($timestamps['check_in']->lt($timestamps['work_start'])) {
+                throw new \Exception('Check-in time is too early.');
             }
+
+            if ($timestamps['check_in']->gt($timestamps['work_end'])) {
+                throw new \Exception('Check-in time is too late.');
+            }
+
 
         } catch (\Exception $e) {
             if (!$e instanceof ValidationException) {

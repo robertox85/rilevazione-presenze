@@ -87,8 +87,8 @@ class AttendancesResource extends Resource
                         return date('H:i', strtotime($state));
                     })
                     ->searchable()
-                ->sortable()
-                    ,
+                    ->sortable()
+                ,
 
                 // check out formatted as date time (d/m/Y H:i)
                 Tables\Columns\TextColumn::make('check_out')
