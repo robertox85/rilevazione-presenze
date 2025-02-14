@@ -243,7 +243,7 @@ class UserAuthController extends Controller
 
             // Recupera presenza di oggi per questo utente
             $user = $request->user();
-            $isExternal = $user->contract_type === 'EXTERNAL';
+
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereDate('date', Carbon::now()->toDateString())
                 ->first();
@@ -274,12 +274,12 @@ class UserAuthController extends Controller
 
             // Verifica la distanza
 
-            Log::info('isExternal: ' . $isExternal);
+            Log::info('isExternal: ' . $user->contract_type);
             Log::info('latitude: ' . $request->latitude);
             Log::info('longitude: ' . $request->longitude);
             Log::info('location: ' . $location);
 
-            if (!$isExternal) {
+            if ($user->contract_type !== 'EXTERNAL') {
                 $this->validateDistance($request->latitude, $request->longitude, $location);
             }
 
@@ -324,8 +324,7 @@ class UserAuthController extends Controller
             // Recupera l'utente con la posizione
             $user = $this->getUserWithLocation($request->user()->id);
 
-            // Verifica se l'utente è esterno
-            $isExternal = $user->contract_type === 'external';
+
 
             // Verifica se l'utente ha già effettuato il check-in per oggi
             $attendance = Attendance::where('user_id', $user->id)
@@ -343,10 +342,9 @@ class UserAuthController extends Controller
             // Verifica l'orario di check-in
             $this->validateWorkingHours($location, $request->check_in, 'UTC', Carbon::now());
 
-            Log::info('isExternal: ' . $isExternal);
 
             // Verifica la distanza
-            if (!$isExternal) {
+            if ($user->contract_type !== 'EXTERNAL') {
                 $this->validateDistance($request->latitude, $request->longitude, $location);
             }
 
