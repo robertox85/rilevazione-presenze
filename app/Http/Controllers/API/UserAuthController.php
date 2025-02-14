@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\URL;
 
 class UserAuthController extends Controller
 {
-    private const DISTANCE_TOLERANCE = 150; // Tolleranza di 20 metri
+    private const DISTANCE_TOLERANCE = 150; // Tolleranza di 150 metri
     private const REGEX_UUID = 'regex:/^[0-9a-fA-F]{16}$/';
 
     // Method to handle user authentication and token generation
@@ -243,7 +243,7 @@ class UserAuthController extends Controller
 
             // Recupera presenza di oggi per questo utente
             $user = $request->user();
-            $isExternal = $user->contract_type === 'external';
+            $isExternal = $user->contract_type === 'EXTERNAL';
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereDate('date', Carbon::now()->toDateString())
                 ->first();
