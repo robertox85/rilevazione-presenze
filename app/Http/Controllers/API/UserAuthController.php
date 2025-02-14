@@ -337,6 +337,7 @@ class UserAuthController extends Controller
             // Verifica l'orario di check-in
             $this->validateWorkingHours($location, $request->check_in, 'UTC', Carbon::now());
 
+            Log::info('isExternal: ' . $isExternal);
             // Verifica la distanza
             if (!$isExternal) {
                 $this->validateDistance($request->latitude, $request->longitude, $location);
@@ -536,6 +537,7 @@ class UserAuthController extends Controller
             $location
         );
 
+        Log::log('info', 'Distance from location: ' . $distance . ' meters');
 
         if ($distance > self::DISTANCE_TOLERANCE) {
             throw new \Exception('Distance from location is greater than tolerance, distance: ' . $distance . ' meters');
