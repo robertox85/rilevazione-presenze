@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\URL;
 
 class UserAuthController extends Controller
 {
-    private const DISTANCE_TOLERANCE = 150; // Tolleranza di 20 metri
+    private const DISTANCE_TOLERANCE = 150; // Tolleranza di 150 metri
     private const REGEX_UUID = 'regex:/^[0-9a-fA-F]{16}$/';
 
     // Method to handle user authentication and token generation
@@ -243,7 +243,7 @@ class UserAuthController extends Controller
 
             // Recupera presenza di oggi per questo utente
             $user = $request->user();
-            $isExternal = $user->contract_type === 'external';
+
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereDate('date', Carbon::now()->toDateString())
                 ->first();
@@ -273,7 +273,13 @@ class UserAuthController extends Controller
             $this->validateWorkingHours($location, $checkOutTime, 'UTC', Carbon::now());
 
             // Verifica la distanza
-            if (!$isExternal) {
+
+            Log::info('isExternal: ' . $user->contract_type);
+            Log::info('latitude: ' . $request->latitude);
+            Log::info('longitude: ' . $request->longitude);
+            Log::info('location: ' . $location);
+
+            if ($user->contract_type !== 'EXTERNAL') {
                 $this->validateDistance($request->latitude, $request->longitude, $location);
             }
 
@@ -318,8 +324,7 @@ class UserAuthController extends Controller
             // Recupera l'utente con la posizione
             $user = $this->getUserWithLocation($request->user()->id);
 
-            // Verifica se l'utente è esterno
-            $isExternal = $user->contract_type === 'external';
+
 
             // Verifica se l'utente ha già effettuato il check-in per oggi
             $attendance = Attendance::where('user_id', $user->id)
@@ -337,8 +342,9 @@ class UserAuthController extends Controller
             // Verifica l'orario di check-in
             $this->validateWorkingHours($location, $request->check_in, 'UTC', Carbon::now());
 
+
             // Verifica la distanza
-            if (!$isExternal) {
+            if ($user->contract_type !== 'EXTERNAL') {
                 $this->validateDistance($request->latitude, $request->longitude, $location);
             }
 
@@ -536,6 +542,7 @@ class UserAuthController extends Controller
             $location
         );
 
+        Log::log('info', 'Distance from location: ' . $distance . ' meters');
 
         if ($distance > self::DISTANCE_TOLERANCE) {
             throw new \Exception('Distance from location is greater than tolerance, distance: ' . $distance . ' meters');
