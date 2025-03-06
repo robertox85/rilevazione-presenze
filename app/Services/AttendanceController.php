@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class AttendanceController
 {
-    private const DISTANCE_TOLERANCE = 150; // Tolleranza di 150 metri
+
 
     public function checkIn(Request $request): JsonResponse
     {
@@ -334,7 +334,7 @@ class AttendanceController
 
         Log::log('info', 'Distance from location: ' . $distance . ' meters');
 
-        if ($distance > self::DISTANCE_TOLERANCE) {
+        if ($distance > env('DISTANCE_TOLERANCE')) {
             throw new \Exception('Distance from location is greater than tolerance, distance: ' . $distance . ' meters');
         }
 
