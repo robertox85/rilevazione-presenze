@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Models\Device;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -74,5 +75,22 @@ class Helper
 
         }
         return $result;
+    }
+
+
+    public static function getDevice($device_uuid, $user_id): Device
+    {
+        $device = Device::firstOrCreate([
+            'device_uuid' => $device_uuid,
+            'user_id' => $user_id,
+        ], [
+            'device_name' => $request->device_name ?? 'Unknown',
+        ]);
+
+        if (!$device) {
+            throw new \Exception('Device not authorized.');
+        }
+
+        return $device;
     }
 }
