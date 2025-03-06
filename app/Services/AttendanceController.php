@@ -20,7 +20,6 @@ class AttendanceController
     public function checkIn(Request $request): JsonResponse
     {
         try {
-
             $this->validateCheckInRequest($request);
             $device = Helper::getDevice($request->device_uuid, $request->user()->id);
             $user = $this->getUser($request);
