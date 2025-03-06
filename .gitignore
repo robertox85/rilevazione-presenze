@@ -21,3 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/release.sh
+/app/Http/Controllers/API/UserAuthControllerBack.php
+git-scripts

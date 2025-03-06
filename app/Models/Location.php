@@ -78,26 +78,48 @@ class Location extends Model
         });
     }
 
-    public function isWorkingDay(Carbon $date): bool
+    public function getTimezone(): string
     {
+        return $this->timezone ?? 'UTC';
+    }
+
+    public function isWorkingDay(): bool
+    {
+        $date = $this->nowInLocationTimezone();
         $working_days = $this->working_days ?? [1, 2, 3, 4, 5]; // Default: lunedì-venerdì
 
-        // Controlla se il giorno della settimana è un giorno lavorativo
-        if (!in_array($date->dayOfWeekIso, $working_days)) {
+        $today = $date->dayOfWeekIso;
+        $isWorkingDay = in_array($today, $working_days);
+        $isHoliday = $this->isHoliday($date);
+
+        if (!$isWorkingDay) {
             return false;
         }
 
-        // Controlla se la sede esclude le festività
-        if ($this->exclude_holidays) {
-            $holiday = Holiday::where('location_id', $this->id)
-                ->where('holiday_date', $date->toDateString())
-                ->exists();
-
-            if ($holiday) {
-                return false;
-            }
+        if ($isHoliday && $this->exclude_holidays) {
+            return false;
         }
 
         return true;
+    }
+
+    private function isHoliday(Carbon $date): bool
+    {
+        return $this->holidays()->where('holiday_date', $date->format('Y-m-d'))->exists();
+    }
+
+    public function nowInLocationTimezone(): Carbon
+    {
+        return Carbon::now($this->getTimezone());
+    }
+
+    public function getWorkingStartTime(): string
+    {
+        return $this->working_start_time->format('H:i');
+    }
+
+    public function getWorkingEndTime(): string
+    {
+        return $this->working_end_time->format('H:i');
     }
 }
