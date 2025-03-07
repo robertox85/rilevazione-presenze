@@ -94,4 +94,8 @@ class User extends Authenticatable
     {
         return $this->contract_type === 'EXTERNAL';
     }
+
+    public function getDevice() {
+        return $this->devices()->first();
+    }
 }

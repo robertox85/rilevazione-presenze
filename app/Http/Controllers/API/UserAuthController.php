@@ -2,12 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
-
-use App\Models\Device;
-use App\Models\Attendance;
-use App\Models\Location;
 use App\Models\User;
 
 use Illuminate\Http\JsonResponse;
@@ -17,14 +12,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
-
-// Method to handle user login
-use Hashids\Hashids;
-use Illuminate\Support\Facades\URL;
-
-
 class UserAuthController extends Controller
 {
 
@@ -89,7 +76,7 @@ class UserAuthController extends Controller
                 ], 401);
             }
 
-            $device = Helper::getDevice($user->device_uuid, $user->id);
+            $device = $user->getDevice();
 
             if (!$user->active) {
                 return response()->json([
