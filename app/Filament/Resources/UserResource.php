@@ -180,6 +180,7 @@ class UserResource extends Resource
                     ->label(trans('filament-users::user.resource.unverified'))
                     ->query(fn(Builder $query): Builder => $query->whereNull('email_verified_at')),
             ])
+
             ->actions([
                 ActionGroup::make([
                     ViewAction::make(),

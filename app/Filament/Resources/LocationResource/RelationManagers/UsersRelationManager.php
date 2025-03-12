@@ -51,7 +51,16 @@ class UsersRelationManager extends RelationManager
                     'EXTERNAL' => 'External',
                 ])->default('FULL_TIME'),
 
+            Forms\Components\Select
+                ::make('location_id')
+                ->relationship('location', 'name')
+                ->required()
+                ->label('Location')
+                ->default(1),
+
         ];
+
+
 
 
         if (config('filament-users.shield') && class_exists(FilamentShield::class)) {
@@ -112,12 +121,9 @@ class UsersRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+
             ]);
     }
 }

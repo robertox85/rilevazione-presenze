@@ -54,6 +54,11 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function getLocation()
+    {
+        return $this->location;
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -83,5 +88,14 @@ class User extends Authenticatable
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function isExternal(): bool
+    {
+        return $this->contract_type === 'EXTERNAL';
+    }
+
+    public function getDevice() {
+        return $this->devices()->first();
     }
 }

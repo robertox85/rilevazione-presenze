@@ -118,6 +118,7 @@ class AttendancesResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\ExportBulkAction::make()->exporter(AttendanceExporter::class),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
