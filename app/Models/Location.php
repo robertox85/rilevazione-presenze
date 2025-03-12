@@ -56,7 +56,9 @@ class Location extends Model
 
         static::saving(function (Location $location) {
             if ($location->isDirty('address')) {
-                $data = $this->updateCoordinates($location->address);
+                // $data = $this->updateCoordinates($location->address);
+                $data = $location->updateCoordinates($location->address);
+
                 if (!empty($data)) {
                     $location->latitude = $data['latitude'];
                     $location->longitude = $data['longitude'];
