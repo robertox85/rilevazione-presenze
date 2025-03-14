@@ -76,7 +76,9 @@ class UserAuthController extends Controller
                 ], 401);
             }
 
-            $device = $user->getDevice();
+            $deviceUuid = $request->input('device_uuid');
+            $deviceName = $request->input('device_name');
+            $device = $user->getDevice($deviceUuid, $deviceName);
 
             if (!$user->active) {
                 return response()->json([
