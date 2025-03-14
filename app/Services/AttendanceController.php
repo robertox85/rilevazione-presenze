@@ -36,7 +36,9 @@ class AttendanceController
             $this->requestValidator->validateCheckInRequest($request);
 
             $user = $request->user();
-            $device = $user->getDevice();
+            $deviceUuid = $request->input('device_uuid');
+            $deviceName = $request->input('device_name');
+            $device = $user->getDevice($deviceUuid, $deviceName);
             $location = $user->getLocation();
 
             $nowInLocationTimezone = $location->nowInLocationTimezone();
@@ -53,8 +55,8 @@ class AttendanceController
             }
 
             Attendance::create([
-                'user_id' => $user->id,
-                'device_id' => $device->id,
+                'user_id' => $user->id ?? null,
+                'device_id' => $device->id ?? null,
                 'date' => $today,
                 'check_in' => $check_in_time_request,
                 'check_in_latitude' => $request->latitude,
@@ -63,13 +65,14 @@ class AttendanceController
 
             return response()->json([
                 'message' => 'Check-in successfully registered.',
-                'user_id' => $user->id,
+                'user_id' => $user->id ?? null,
                 'date' => $today,
                 'check_in' => $check_in_time_request,
             ], 201);
 
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
+            $stack = $e->getTrace();
+            Log::error($e->getMessage() . ' ' . $stack[0]['file'] . ' ' . $stack[0]['line']);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }

@@ -95,7 +95,20 @@ class User extends Authenticatable
         return $this->contract_type === 'EXTERNAL';
     }
 
-    public function getDevice() {
-        return $this->devices()->first();
+    public function getDevice(string $deviceUuid, ?string $deviceName = null) {
+
+        $device = $this->devices()->where('device_uuid', $deviceUuid)->first();
+
+        if (!$device) {
+            // Creazione di un nuovo device per l'utente
+            $device = $this->devices()->create([
+                'user_id' => $this->id,
+                'device_uuid' => $deviceUuid,
+                'device_name' => $deviceName ?? 'Default device',
+            ]);
+        }
+
+        return $device;
     }
+
 }
