@@ -17,6 +17,16 @@ class AttendanceExporter extends Exporter
             ExportColumn::make('id')
                 ->label('ID'),
             ExportColumn::make('user_id'),
+
+            ExportColumn::make('name')
+                ->default(function (Attendance $attendance) {
+                    return $attendance->user->name;
+                }),
+            ExportColumn::make('surname')
+                ->default(function (Attendance $attendance) {
+                    return $attendance->user->surname;
+                }),
+
             ExportColumn::make('device_id'),
             ExportColumn::make('date'),
             ExportColumn::make('check_in'),
